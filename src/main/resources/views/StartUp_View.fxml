@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox fx:id="mainContainer" alignment="TOP_CENTER" maxWidth="350.0" minWidth="350.0" prefHeight="400.0" prefWidth="350.0" stylesheets="@../css/SkypeTheme.css" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <ImageView fitHeight="68.0" fitWidth="116.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../images/skype-logo.png" />
+         </image>
+      </ImageView>
+      <VBox fx:id="contentContainer" alignment="CENTER" maxWidth="350.0" minWidth="350.0" prefWidth="350.0" />
+   </children>
+   <padding>
+      <Insets top="10.0" />
+   </padding>
+</VBox>

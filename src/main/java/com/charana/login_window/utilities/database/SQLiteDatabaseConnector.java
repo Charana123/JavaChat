@@ -1,0 +1,123 @@
+package com.charana.login_window.utilities.database;
+
+import com.charana.login_window.utilities.database.user.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.URISyntaxException;
+import java.sql.*;
+
+public class SQLiteDatabaseConnector {
+    static Logger logger = LoggerFactory.getLogger(SQLiteDatabaseConnector.class);
+    static Connection conn;
+
+    static {
+        databaseInit();
+    }
+
+    static private void databaseInit(){
+        try {
+            String pathToDatabase = SQLiteDatabaseConnector.class.getResource(".").toURI().getPath();
+            conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDatabase + "database.sqlite3");
+
+            Statement stm = conn.createStatement();
+            stm.execute("CREATE TABLE IF NOT EXISTS Accounts (Email TINYTEXT, Password TINYTEXT, AccountName TINYTEXT, Status TINYTEXT, Gender TINYTEXT, About MEDIUMTEXT, Birthday TINYTEXT)");
+        }
+        catch(URISyntaxException | SQLException e){
+            e.printStackTrace();
+            System.exit(1);
+        }
+    }
+
+    static public boolean login(String email, String password) {
+        try {
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM Accounts WHERE Email=?");
+            pstmt.setString(1, email);
+            ResultSet rs = pstmt.executeQuery();
+            if(rs.next()){
+                if(rs.getString("Password").equals(password)) { return true; }
+                else { return false; }
+            }
+        }
+        catch (SQLException e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    static public boolean accountExists(String email){
+        try {
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM Accounts WHERE Email=?");
+            pstmt.setString(1, email);
+            ResultSet rs = pstmt.executeQuery();
+            return (getRows(rs) > 0);
+        }
+        catch (SQLException e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    static public boolean resetPassword(String email, String newPassword){
+        try{
+            PreparedStatement pstmt = conn.prepareStatement("UPDATE Accounts SET Password=? WHERE Email=?");
+            pstmt.setString(1, newPassword);
+            pstmt.setString(2, email);
+            boolean updateSuccess = pstmt.executeUpdate() == 1;
+            return updateSuccess;
+        }
+        catch (SQLException e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    static public void createAccount(User user){
+        try {
+            PreparedStatement pstmt = conn.prepareStatement("INSERT INTO Accounts VALUES (?,?,?,?,?,?,?)");
+            pstmt.setString(1, user.getEmail());
+            pstmt.setString(2, user.getPassword());
+            pstmt.setString(3, user.getDisplayName());
+            pstmt.setString(4, null); //Status
+            pstmt.setString(5, user.getGender());
+            pstmt.setString(6, null); //About
+            pstmt.setString(7, user.getBirthday());
+            pstmt.executeUpdate();
+        }
+        catch (SQLException e){
+            e.printStackTrace();
+        }
+    }
+
+    //SQL only supports TYPE_FORWARD_ONLY and CONCUR_READ_ONLY cursors (manual scroll only allowed)
+    static private int getRows(ResultSet rs) throws SQLException {
+        int rows = 0;
+        while(rs.next()) { rows++; }
+        return rows;
+    }
+
+    //Debugging only
+    static private void printResultSet(ResultSet rs) throws SQLException {
+        while(rs.next()){
+            System.out.println(rs.getRow() + " " + rs.getString("Email"));
+        }
+        System.out.println("ResultSet END!");
+    }
+
+//    public static void main(String[] args){
+//        User user = new User("charananandasena@yahoo.com", "NaruSaku123", "Charana", Status.ONLINE, Gender.MALE, "Life is Good", new Birthday(7 , 10, 1997));
+//        try {
+//            createAccount(user);
+//            boolean exists = accountExists(user.email);
+//            if(exists){ System.out.println("EXISTS"); }
+//            else { System.out.println("DOESN'T EXIST"); }
+////            boolean valid = login(user.email, user.password);
+////            if(valid) { System.out.println("VALID"); }
+////            else { System.out.println("NOT VALID"); }
+//        }
+//        catch(SQLException e) {
+//            e.printStackTrace();
+//            System.exit(1);
+//        }
+//    }
+}

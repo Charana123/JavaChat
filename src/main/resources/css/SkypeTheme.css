@@ -1,0 +1,30 @@
+.root{
+
+    -fx-background-color: white; /* skype light blue #1DB0ED*/
+    -fx-font-family: "Arial";
+}
+
+.text-field, .password-field{
+    -fx-background-color: -fx-control-inner-background;
+    /*-fx-border-width: 0 0 1.5px 0;*/
+    -fx-border-color: transparent transparent #187EB2 transparent; /* skype dark blue */
+}
+
+.pin-text-field {
+    -fx-alignment: center;
+}
+
+.text-field, .password-field:focused {
+    -fx-focus-color: transparent;
+}
+
+.button {
+    -fx-background-color: #187EB2; /* skype dark blue */
+    -fx-background-radius: 20px;
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+}
+
+.combo-box {
+    -fx-background-color: -fx-body-color; /* #EBEBEB; */
+}
