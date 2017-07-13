@@ -7,7 +7,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane prefHeight="400.0" prefWidth="350.0" stylesheets="@../css/SkypeTheme.css" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.charana.login_window.ui.create_account.CreateAccount_Controller">
+<AnchorPane prefHeight="400.0" prefWidth="350.0" stylesheets="@../../css/SkypeTheme.css" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.charana.login_window.ui.create_account.CreateAccount_Controller">
    <children>
       <TextField fx:id="emailAddressField" layoutX="27.0" layoutY="70.0" prefHeight="35.0" prefWidth="296.0" promptText="Email address" />
       <VBox fx:id="passwordFieldContainer" layoutX="27.0" layoutY="126.0" prefHeight="35.0" prefWidth="296.0" />

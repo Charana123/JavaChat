@@ -12,7 +12,7 @@ import java.io.IOException;
 public class MainLauncher extends Application {
 
     private Parent createContent(Stage primaryStage) throws IOException{
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/StartUp_View.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/login_window/StartUp_View.fxml"));
         StartUp_Controller controller = new StartUp_Controller(primaryStage);
         loader.setController(controller);
         return loader.load();

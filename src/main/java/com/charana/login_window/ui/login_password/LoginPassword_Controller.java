@@ -73,7 +73,7 @@ public class LoginPassword_Controller extends BaseController implements Initiali
 
     public static Parent getInstance(StartUp_Controller mainController, String email){
         try{
-            FXMLLoader loader = new FXMLLoader(LoginPassword_Controller.class.getResource("/views/LoginPassword_View.fxml"));
+            FXMLLoader loader = new FXMLLoader(LoginPassword_Controller.class.getResource("/views/login_window/LoginPassword_View.fxml"));
             LoginPassword_Controller controller = new LoginPassword_Controller(email);
             controller.initStartUpController(mainController);
             loader.setController(controller);

@@ -101,7 +101,7 @@ public class CreateAccount_Controller extends BaseController implements Initiali
 
     public static Parent getInstance(StartUp_Controller mainController){
         try{
-            FXMLLoader loader = new FXMLLoader(CreateAccount_Controller.class.getResource("/views/CreateAccount_View.fxml"));
+            FXMLLoader loader = new FXMLLoader(CreateAccount_Controller.class.getResource("/views/login_window/CreateAccount_View.fxml"));
             Parent root = loader.load();
             BaseController controller = loader.getController();
             controller.initStartUpController(mainController);

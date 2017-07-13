@@ -56,7 +56,7 @@ public class LoginEmail_Controller extends BaseController implements Initializab
 
     public static Parent getInstance(StartUp_Controller mainController){
         try{
-            FXMLLoader loader = new FXMLLoader(LoginEmail_Controller.class.getResource("/views/LoginEmail_View.fxml"));
+            FXMLLoader loader = new FXMLLoader(LoginEmail_Controller.class.getResource("/views/login_window/LoginEmail_View.fxml"));
             Parent root = loader.load();
             LoginEmail_Controller controller = loader.getController();
             controller.initStartUpController(mainController);

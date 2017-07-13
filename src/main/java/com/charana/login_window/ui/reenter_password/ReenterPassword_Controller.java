@@ -75,7 +75,7 @@ public class ReenterPassword_Controller extends BaseController implements Initia
 
     public static Parent getInstance(StartUp_Controller mainController, String email){
         try {
-            FXMLLoader loader = new FXMLLoader(ReenterPassword_Controller.class.getResource("/views/ReenterPassword_View.fxml"));
+            FXMLLoader loader = new FXMLLoader(ReenterPassword_Controller.class.getResource("/views/login_window/ReenterPassword_View.fxml"));
             ReenterPassword_Controller controller = new ReenterPassword_Controller(email);
             controller.initStartUpController(mainController);
             loader.setController(controller);

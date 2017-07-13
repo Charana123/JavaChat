@@ -65,7 +65,7 @@ public class ForgotPassword_Controller extends BaseController implements Initial
 
     public static Parent getInstance(StartUp_Controller mainController, String currentAccountKey, String email){
         try {
-            FXMLLoader loader = new FXMLLoader(ForgotPassword_Controller.class.getResource("/views/ForgotPassword_View.fxml"));
+            FXMLLoader loader = new FXMLLoader(ForgotPassword_Controller.class.getResource("/views/login_window/ForgotPassword_View.fxml"));
             ForgotPassword_Controller controller = new ForgotPassword_Controller(currentAccountKey, email);
             controller.initStartUpController(mainController);
             loader.setController(controller);
