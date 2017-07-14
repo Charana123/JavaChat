@@ -56,9 +56,12 @@ public class CreateAccount_Controller extends BaseController implements Initiali
     @FXML
     private void createAccount() {
         if(fieldsValid()){
-            User user = new User(emailAddressField.getText(),
+            User user = new User(
+                    null, //TODO:: Set in a profile pic in separate screen
+                    emailAddressField.getText(),
                     passwordField.getPassword(),
                     new DisplayName(firstNameField.getText(), lastNameField.getText()),
+                    Status.ONLINE,
                     Gender.valueOf(genderChooser.getValue()),
                     new Birthday(Integer.parseInt(birthDay.getText()), Month.valueOf(birthMonthChooser.getValue()), Integer.parseInt(birthYear.getText())));
 

@@ -17,13 +17,14 @@ public class SQLiteDatabaseConnector {
 
     static private void databaseInit(){
         try {
-            String pathToDatabase = SQLiteDatabaseConnector.class.getResource(".").toURI().getPath();
-            conn = DriverManager.getConnection("jdbc:sqlite:" + pathToDatabase + "database.sqlite3");
+            Class.forName("org.h2.Driver"); //Load JDBC H2 Driver class
+            String pathToDatabase = SQLiteDatabaseConnector.class.getResource("/").toURI().getPath();
+            conn = DriverManager.getConnection("jdbc:h2:" + pathToDatabase + "database.sqlite3");
 
             Statement stm = conn.createStatement();
             stm.execute("CREATE TABLE IF NOT EXISTS Accounts (Email TINYTEXT, Password TINYTEXT, AccountName TINYTEXT, Status TINYTEXT, Gender TINYTEXT, About MEDIUMTEXT, Birthday TINYTEXT)");
         }
-        catch(URISyntaxException | SQLException e){
+        catch(ClassNotFoundException | URISyntaxException | SQLException e){
             e.printStackTrace();
             System.exit(1);
         }
@@ -47,7 +48,7 @@ public class SQLiteDatabaseConnector {
 
     static public boolean accountExists(String email){
         try {
-            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM Accounts WHERE Email=?");
+            PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM Accounts WHERE Email=?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
             pstmt.setString(1, email);
             ResultSet rs = pstmt.executeQuery();
             return (getRows(rs) > 0);
@@ -89,10 +90,18 @@ public class SQLiteDatabaseConnector {
         }
     }
 
-    //SQL only supports TYPE_FORWARD_ONLY and CONCUR_READ_ONLY cursors (manual scroll only allowed)
-    static private int getRows(ResultSet rs) throws SQLException {
-        int rows = 0;
-        while(rs.next()) { rows++; }
+//    //SQLite only supports TYPE_FORWARD_ONLY and CONCUR_READ_ONLY cursors (manual scroll only allowed)
+//    static private int getRows(ResultSet rs) throws SQLException {
+//        int rows = 0;
+//        while(rs.next()) { rows++; }
+//        return rows;
+//    }
+
+    //Gets number of rows in ResultSet and leaves ResultSet unchanged
+    static private int getRows(ResultSet rs) throws SQLException{
+        rs.last();
+        int rows = rs.getRow();
+        rs.beforeFirst();
         return rows;
     }
 

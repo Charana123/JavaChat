@@ -1,0 +1,19 @@
+.root *{
+    -fx-background-color: white;
+}
+
+.button{
+    -fx-background-color: transparent;
+    -fx-text-fill: black;
+}
+
+.button:hover {
+    -fx-background-color: lightblue; /* Skype light blue */
+    -fx-font-weight: bold;
+    -fx-font-size: 1.2em;
+}
+
+.glyph-icon {
+    -fx-text-fill: slategrey;
+    -fx-fill: slategrey;
+}
