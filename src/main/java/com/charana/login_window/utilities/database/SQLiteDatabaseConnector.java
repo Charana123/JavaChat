@@ -17,18 +17,19 @@ public class SQLiteDatabaseConnector {
 
     static private void databaseInit(){
         try {
+            //Establish connection to database "database" at server localhost:9081
             Class.forName("org.h2.Driver"); //Load JDBC H2 Driver class
             String pathToDatabase = SQLiteDatabaseConnector.class.getResource("/").toURI().getPath();
-            conn = DriverManager.getConnection("jdbc:h2:" + pathToDatabase + "database.sqlite3");
-
-            Statement stm = conn.createStatement();
-            stm.execute("CREATE TABLE IF NOT EXISTS Accounts (Email TINYTEXT, Password TINYTEXT, AccountName TINYTEXT, Status TINYTEXT, Gender TINYTEXT, About MEDIUMTEXT, Birthday TINYTEXT)");
+            conn = DriverManager.getConnection("jdbc:h2:tcp://localhost:9081/" + pathToDatabase + "database");
         }
         catch(ClassNotFoundException | URISyntaxException | SQLException e){
             e.printStackTrace();
             System.exit(1);
         }
     }
+
+    //TODO:: Send a "Login" Message over the network with `email` and `password` parameters
+    //TODO:: Get a result from the network for the login request
 
     static public boolean login(String email, String password) {
         try {

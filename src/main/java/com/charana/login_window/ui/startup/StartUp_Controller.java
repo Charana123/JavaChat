@@ -6,23 +6,46 @@ import com.charana.login_window.ui.forgot_password.ForgotPassword_Controller;
 import com.charana.login_window.ui.login_email.LoginEmail_Controller;
 import com.charana.login_window.ui.login_password.LoginPassword_Controller;
 import com.charana.login_window.ui.reenter_password.ReenterPassword_Controller;
+import com.charana.login_window.utilities.database.ServerConnector;
+import com.charana.server.Server;
+import com.sun.tools.javadoc.Start;
+import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class StartUp_Controller implements Initializable {
+    private static Logger logger = LoggerFactory.getLogger(StartUp_Controller.class);
     @FXML VBox mainContainer;
     @FXML VBox contentContainer;
-    Stage primaryStage;
+    private Stage primaryStage;
+    private InetAddress serverIP;
+    private int serverPort;
+    private ServerConnector serverConnector;
+    Alert warningDialog;
 
-    public StartUp_Controller(Stage primaryStage){
+    public StartUp_Controller(Stage primaryStage, InetAddress serverIP, int serverPort){
+        this.serverIP = serverIP;
+        this.serverPort = serverPort;
         this.primaryStage = primaryStage;
+
+        warningDialog = new Alert(Alert.AlertType.WARNING);
+        warningDialog.initModality(Modality.NONE);
+
+        serverConnector = new ServerConnector(serverIP, serverPort, this);
     }
 
     @Override
@@ -67,6 +90,28 @@ public class StartUp_Controller implements Initializable {
         contentContainer.getChildren().removeAll(contentContainer.getChildren());
         contentContainer.getChildren().add(layout);
     }
+
+    public void showWarningDialog(String warningHeader, String warningContent){
+        if(!warningDialog.isShowing()) {
+            Platform.runLater(() -> {
+                warningDialog.setTitle("Warning");
+                warningDialog.setHeaderText(warningHeader);
+                warningDialog.setContentText(warningContent);
+                warningDialog.show(); //Non-Blocking
+            });
+        }
+    }
+
+    public void hideWarningDialog(){
+        Platform.runLater(() -> {
+            if(warningDialog.isShowing()) warningDialog.close();
+        });
+    }
+
+    public Stage getPrimaryStage() {
+        return primaryStage;
+    }
+
 }
 
 
