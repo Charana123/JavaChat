@@ -5,7 +5,7 @@ import com.charana.server.message.MessageType;
 import java.util.UUID;
 
 public class DatabaseCommandMessage extends Message {
-    DatabaseCommandType commandType;
+    public final DatabaseCommandType commandType;
 
     protected DatabaseCommandMessage(UUID clientID, DatabaseCommandType commandType) {
         super(MessageType.DATABASE_COMMAND, clientID);

@@ -57,7 +57,7 @@ public class CreateAccount_Controller extends BaseController implements Initiali
     private void createAccount() {
         if(fieldsValid()){
             User user = new User(
-                    null, //TODO:: Set in a profile pic in separate screen
+                    null, //TODO:: Set in a profile pic in separate screen (or set a default profile picture)
                     emailAddressField.getText(),
                     passwordField.getPassword(),
                     new DisplayName(firstNameField.getText(), lastNameField.getText()),
@@ -65,8 +65,8 @@ public class CreateAccount_Controller extends BaseController implements Initiali
                     Gender.valueOf(genderChooser.getValue()),
                     new Birthday(Integer.parseInt(birthDay.getText()), Month.valueOf(birthMonthChooser.getValue()), Integer.parseInt(birthYear.getText())));
 
-            if(!SQLiteDatabaseConnector.accountExists(emailAddressField.getText())){
-                SQLiteDatabaseConnector.createAccount(user);
+            if(!startUp_controller.databaseConnector.accountExists(emailAddressField.getText())){
+                startUp_controller.databaseConnector.createAccount(user);
                 logger.debug("Account Created");
                 this.startUp_controller.loadLoginEmailView();
             }

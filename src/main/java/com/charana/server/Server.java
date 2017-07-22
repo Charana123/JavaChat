@@ -2,6 +2,12 @@ package com.charana.server;
 
 import com.charana.server.message.*;
 
+import com.charana.server.message.database_message.DatabaseCommandMessage;
+import com.charana.server.message.database_message.DatabaseResponseMessage;
+import com.charana.server.message.database_message.concrete_database_message.AccountExistsMessage;
+import com.charana.server.message.database_message.concrete_database_message.CreateAccountMessage;
+import com.charana.server.message.database_message.concrete_database_message.LoginMessage;
+import com.charana.server.message.database_message.concrete_database_message.ResetPasswordMessage;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,16 +16,13 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketTimeoutException;
-import java.sql.SQLException;
+import java.net.*;
+import java.sql.Connection;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
 
 public class Server {
     public final int serverPort = 8192;
@@ -27,8 +30,9 @@ public class Server {
     private boolean serverisRunning;
     //Such that only one client manager thread can be broadcasting a message to all other clients
     private List<ServerClient> clients = Collections.synchronizedList(new ArrayList<>());
+    DatabaseConnectionPool connectionPool;
 
-    public Server() throws IOException {
+    public Server(InetAddress databaseIP, int databasePort) throws IOException {
         ServerSocket connectionListener = new ServerSocket(serverPort);
 
         //Start thread (connectionManager) that create threads that manages individual connections with clients
@@ -39,15 +43,23 @@ public class Server {
                 while (serverisRunning) {
                     try {
                         Socket connection = connectionListener.accept();
-                        new Thread(new clientConnectionManager(connection)).start();
-                        logger.info("Connection made");
-                    } catch (IOException e) { //If connecting so a single client connection fails, WARNING + continue waiting for other connections
+                        Runnable clientConnectionMananger = new clientConnectionManager(connection);
+                        new Thread(clientConnectionMananger).start();
+                    }
+                    catch (InterruptedException e){ //"CONNECTION MANAGER" thread was interrupted
+                        logger.warn(Thread.currentThread().getName() + " was Interrupted", e);
+                        serverisRunning = false;
+                    }
+                    catch (IOException e) { //If connecting so a single client connection fails, WARNING + continue waiting for other connections
                         logger.warn("Client connection failed");
                     }
                 }
             }
         };
         connectionManager.start();
+
+        //Start with a pool that assumes 5 clients will connect to the server (and thus the database)
+        connectionPool = new DatabaseConnectionPool(databaseIP, databasePort, 5);
     }
 
     //Handles communication with a client, receiving, sending, of messages
@@ -58,12 +70,15 @@ public class Server {
         private ServerClient thisClient;
         private boolean hasConnected = false; //Whether client has send a connection message to register with the server
         private String clientName;
+        private DatabaseConnector dbconn;
 
-        clientConnectionManager(Socket connection){
+        clientConnectionManager(Socket connection) throws InterruptedException{
             this.connection = connection;
             clientName = connection.getInetAddress().getHostAddress() + ":" + connection.getPort();
-        }
 
+            Connection conn = connectionPool.getConnection();
+            dbconn = new DatabaseConnector(conn);
+        }
 
         @Override
         public void run() {
@@ -114,11 +129,46 @@ public class Server {
                     break;
                 case PING: //Responds to PING messages regardless of whether the client has sent a Connection Message
                     send(new PingMessage(null));
+                    break;
+                case DATABASE_COMMAND:
+                    processDatabaseCommand((DatabaseCommandMessage) message);
+                    break;
                 case DISCONNECTED:
                     break;
                 case VOICE_MESSAGE:
                     break;
                 case SERVER:
+                    break;
+            }
+        }
+
+
+        private void processDatabaseCommand(DatabaseCommandMessage message){
+            boolean result;
+            switch (message.commandType){
+                case LOGIN:
+                    System.out.println("Login Message");
+                    LoginMessage loginMessage = (LoginMessage) message;
+                    result = dbconn.login(loginMessage.email, loginMessage.password);
+                    send(new DatabaseResponseMessage(null, result));
+                    break;
+                case CREATE_ACCOUNT:
+                    System.out.println("Create Account Message");
+                    CreateAccountMessage createAccountMessage = (CreateAccountMessage) message;
+                    result = dbconn.createAccount(createAccountMessage.user);
+                    send(new DatabaseResponseMessage(null, result));
+                    break;
+                case ACCOUNT_EXISTS:
+                    System.out.println("Account Exists Message");
+                    AccountExistsMessage accountExistsMessage = (AccountExistsMessage) message;
+                    result = dbconn.accountExists(accountExistsMessage.email);
+                    send(new DatabaseResponseMessage(null, result));
+                    break;
+                case RESET_PASSWORD:
+                    System.out.println("Reset Password Message");
+                    ResetPasswordMessage resetPasswordMessage = (ResetPasswordMessage) message;
+                    result = dbconn.resetPassword(resetPasswordMessage.email, resetPasswordMessage.newPassword);
+                    send(new DatabaseResponseMessage(null, result));
                     break;
             }
         }
@@ -129,8 +179,7 @@ public class Server {
             synchronized (clients){
                 clients.stream().forEach(client -> {
                     try { //The client manager that is broadcasting a message to every client synchronizes with the client manager
-                        //thread that owns the client
-                        synchronized (client.toClientStream){
+                        synchronized (client.toClientStream){ //thread that owns the client
                             client.toClientStream.writeObject(text_message);
                         }
                     }
@@ -142,8 +191,8 @@ public class Server {
         }
 
         private void send(Message message){
-            try {
-                synchronized (thisClientOutStream){
+            try { //The client manager that is broadcasting a message to every client synchronizes with the client manager
+                synchronized (thisClientOutStream){ //thread that owns the client
                     thisClientOutStream.writeObject(message);
                 }
             }
@@ -167,7 +216,8 @@ public class Server {
         private void closeThisConnection(){
             //Remove the client from the server, if the client has previously connected
             if(!Objects.isNull(thisClient)) { clients.remove(thisClient); }
-            logger.info("Closing connection with client {}",  connection.getInetAddress().getAddress(), connection.getPort());
+            connectionPool.closeConnection(dbconn.conn);
+            logger.info("Closing connection with client {}:{}",  connection.getInetAddress().getHostAddress(), connection.getPort());
             try { connection.close(); }
             catch (IOException e) { logger.error("Could not close connection/socket", e); }
         }
@@ -176,9 +226,26 @@ public class Server {
 
     public static void main(String[] args) {
         Logger logger = LoggerFactory.getLogger("Server (main)");
-        try { Server server = new Server(); }
-        //If server could not be creates, ERROR + Terminate application
-        catch (IOException e) { logger.error("Server creation failed"); return; }
+        if(args.length == 2){
+            try {
+                InetAddress databaseIP = InetAddress.getByName(args[0]);
+                int databasePort = Integer.parseInt(args[1]);
+                new Server(databaseIP, databasePort);
+            }
+            catch (UnknownHostException e){
+                System.out.println("Enter valid database IP Address i.e. \"locahost\"");
+                System.exit(1);
+            }
+            catch (NumberFormatException e){
+                System.out.println("Enter valid database ephemeral port i.e. 9081");
+                System.exit(1);
+            }
+            catch (IOException e) {
+                logger.error("Server creation failed", e);
+                System.exit(1);
+            }
+        }
+        else { System.out.println("java -jar server.jar [databaseIP :: String] [databasePort :: int]"); }
     }
 }
 

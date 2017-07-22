@@ -10,7 +10,7 @@ import java.util.UUID;
  * Created by Charana on 7/16/17.
  */
 public class CreateAccountMessage extends DatabaseCommandMessage{
-    User user;
+    public final User user;
 
     public CreateAccountMessage(UUID clientID, User user) {
         super(clientID, DatabaseCommandType.CREATE_ACCOUNT);

@@ -1,9 +1,8 @@
 package com.charana.login_window.utilities.database.user;
 
-/**
- * Created by Charana on 7/13/17.
- */
-public class Birthday {
+import java.io.Serializable;
+
+public class Birthday implements Serializable{
     Integer day, year;
     Month month;
 

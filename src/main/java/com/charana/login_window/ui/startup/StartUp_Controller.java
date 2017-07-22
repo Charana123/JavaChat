@@ -6,10 +6,8 @@ import com.charana.login_window.ui.forgot_password.ForgotPassword_Controller;
 import com.charana.login_window.ui.login_email.LoginEmail_Controller;
 import com.charana.login_window.ui.login_password.LoginPassword_Controller;
 import com.charana.login_window.ui.reenter_password.ReenterPassword_Controller;
+import com.charana.login_window.utilities.database.DatabaseConnector;
 import com.charana.login_window.utilities.database.ServerConnector;
-import com.charana.server.Server;
-import com.sun.tools.javadoc.Start;
-import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -24,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.URL;
-import java.util.List;
 import java.util.ResourceBundle;
 
 public class StartUp_Controller implements Initializable {
@@ -34,7 +31,7 @@ public class StartUp_Controller implements Initializable {
     private Stage primaryStage;
     private InetAddress serverIP;
     private int serverPort;
-    private ServerConnector serverConnector;
+    public final DatabaseConnector databaseConnector;
     Alert warningDialog;
 
     public StartUp_Controller(Stage primaryStage, InetAddress serverIP, int serverPort){
@@ -45,7 +42,8 @@ public class StartUp_Controller implements Initializable {
         warningDialog = new Alert(Alert.AlertType.WARNING);
         warningDialog.initModality(Modality.NONE);
 
-        serverConnector = new ServerConnector(serverIP, serverPort, this);
+        ServerConnector serverConnector = new ServerConnector(serverIP, serverPort, this);
+        this.databaseConnector = new DatabaseConnector(serverConnector);
     }
 
     @Override

@@ -4,7 +4,6 @@ import com.charana.login_window.ui.BaseController;
 import com.charana.login_window.ui.startup.StartUp_Controller;
 import com.charana.login_window.utilities.Emailer;
 import com.charana.login_window.utilities.SecureAlphaNumericStringGenerator;
-import com.charana.login_window.utilities.database.SQLiteDatabaseConnector;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -60,7 +59,7 @@ public class LoginPassword_Controller extends BaseController implements Initiali
 
     @FXML
     private void login(){
-        if(SQLiteDatabaseConnector.login(email, passwordField.getText())){
+        if(startUp_controller.databaseConnector.login(email, passwordField.getText())){
             if(popOver.isShowing()) popOver.hide();
             logger.debug("Successful Login");
             this.startUp_controller.loadSkypeLoadingAnimation();

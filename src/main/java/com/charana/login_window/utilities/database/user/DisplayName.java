@@ -1,9 +1,8 @@
 package com.charana.login_window.utilities.database.user;
 
-/**
- * Created by Charana on 7/13/17.
- */
-public class DisplayName {
+import java.io.Serializable;
+
+public class DisplayName implements Serializable{
     String firstName, lastName;
 
     public DisplayName(String firstName, String lastName){

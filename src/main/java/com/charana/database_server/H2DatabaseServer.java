@@ -17,14 +17,13 @@ public class H2DatabaseServer {
             server.start();
 
             //Create database server on localhost:9081
-            String pathToDatabase = H2DatabaseServer.class.getResource("/").toURI().getPath();
-            Connection conn = DriverManager.getConnection("jdbc:h2:tcp://localhost:9081/" + pathToDatabase + "database");
+            Connection conn = DriverManager.getConnection("jdbc:h2:tcp://localhost:9081/~/database");
 
             //Create & Configure Database
             Statement stm = conn.createStatement();
             stm.execute("CREATE TABLE IF NOT EXISTS Accounts (Email TINYTEXT, Password TINYTEXT, AccountName TINYTEXT, Status TINYTEXT, Gender TINYTEXT, About MEDIUMTEXT, Birthday TINYTEXT)");
         }
-        catch(ClassNotFoundException | URISyntaxException | SQLException e){
+        catch(ClassNotFoundException | SQLException e){
             e.printStackTrace();
         }
     }

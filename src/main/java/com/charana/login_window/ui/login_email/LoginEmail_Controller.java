@@ -3,7 +3,6 @@ package com.charana.login_window.ui.login_email;
 
 import com.charana.login_window.ui.BaseController;
 import com.charana.login_window.ui.startup.StartUp_Controller;
-import com.charana.login_window.utilities.database.SQLiteDatabaseConnector;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -43,7 +42,7 @@ public class LoginEmail_Controller extends BaseController implements Initializab
     @FXML
     void login(){
         String email = emailField.getText();
-        boolean accountExists = SQLiteDatabaseConnector.accountExists(email);
+        boolean accountExists = startUp_controller.databaseConnector.accountExists(email);
         if(accountExists) {
             if(popOver.isShowing()) popOver.hide();
             logger.debug("Account Exists");

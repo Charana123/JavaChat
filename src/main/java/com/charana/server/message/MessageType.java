@@ -8,5 +8,6 @@ public enum MessageType {
     , DISCONNECTED //Client Disconnected from Chat Server
     , SERVER //Test Message from Server to all Clients
     , DATABASE_COMMAND
+    , DATABASE_RESPONSE
     , PING //To implement the HeartBeat Protocol
 }

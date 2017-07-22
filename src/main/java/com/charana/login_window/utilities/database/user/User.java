@@ -5,7 +5,9 @@ import com.charana.login_window.utilities.database.user.DisplayName;
 import com.charana.login_window.utilities.database.user.Gender;
 import javafx.scene.image.Image;
 
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable {
     Image profileImage; //Loaded/Stored in database as blob
     String email;
     String password;

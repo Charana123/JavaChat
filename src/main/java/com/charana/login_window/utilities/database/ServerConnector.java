@@ -1,18 +1,11 @@
 package com.charana.login_window.utilities.database;
 
 import com.charana.login_window.ui.startup.StartUp_Controller;
-import com.charana.login_window.utilities.database.user.User;
 import com.charana.server.message.ConnectionMessage;
 import com.charana.server.message.Message;
 import com.charana.server.message.PingMessage;
 import com.charana.server.message.database_message.DatabaseResponseMessage;
-import com.charana.server.message.database_message.concrete_database_message.AccountExistsCommandMessage;
-import com.charana.server.message.database_message.concrete_database_message.CreateAccountMessage;
-import com.charana.server.message.database_message.concrete_database_message.LoginMessage;
-import com.charana.server.message.database_message.concrete_database_message.ResetPasswordMessage;
 import com.google.gson.GsonBuilder;
-import javafx.event.EventHandler;
-import javafx.stage.WindowEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,9 +14,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class ServerConnector {
@@ -35,7 +25,7 @@ public class ServerConnector {
     private ObjectInputStream in;
     private Socket socket;
     Thread connect, receive, heartbeat;
-    volatile boolean isConnected, tryConnecting; //Heartbeat
+    volatile boolean isConnected;//Heartbeat
     LinkedBlockingQueue<DatabaseResponseMessage> databaseResponses = new LinkedBlockingQueue<>();
 
 
@@ -47,10 +37,8 @@ public class ServerConnector {
         this.controller = controller;
         connectToServer();
 
-        tryConnecting = true;
         controller.getPrimaryStage().setOnCloseRequest((event) -> {
             disconnect();
-            tryConnecting = false;
         });
     }
 
@@ -58,7 +46,7 @@ public class ServerConnector {
         connect = new Thread("CONNECT"){
             @Override
             public void run() {
-                while(!connect() & tryConnecting) { //While not connected (until a connection is established)
+                while(!connect()) { //While not connected (until a connection is established)
                     try { Thread.sleep(1000); } //Wait for 1 second before Re-Connecting
                     catch (InterruptedException e) { logger.error("Current thread interrupted", e); }
                 }
@@ -99,27 +87,7 @@ public class ServerConnector {
         }
     }
 
-    public boolean login(String email, String password) {
-        send(new LoginMessage(null, email, password));
-        return DequeueResponse();
-    }
-
-    public boolean accountExists(String email){
-        send(new AccountExistsCommandMessage(null, email));
-        return DequeueResponse();
-    }
-
-    public boolean resetPassword(String email, String newPassword){
-        send(new ResetPasswordMessage(null, email, newPassword));
-        return DequeueResponse();
-    }
-
-    public boolean createAccount(User user){
-        send(new CreateAccountMessage(null, user));
-        return DequeueResponse();
-    }
-
-    private boolean DequeueResponse(){
+    public boolean DequeueResponse(){
         try{ return databaseResponses.take().result; }
         catch (InterruptedException e){  //If the current thread is interrupted while being blocked
             logger.error("Thread interrupted during de-queue", e);
@@ -128,15 +96,12 @@ public class ServerConnector {
     }
 
     public void send(Message message){
-        try{ out.writeObject(message); }
-        //Called when either
-        //  The server's socket (ServerSocket) has closed. Either IOException "Connection Reset" or SocketException "Broken Pipe"
-        //  OR
-        //  You closed the socket. SocketException "Socket Closed"
-        // Log Error sending data (some data is lost to the server) namely `message`
-        catch (IOException e){
-            //The peer socket closing will be detected & handled by the receive thread (doesn't have to be handled during send)
+        try{ //Haven't previously connected to the database (out is still not initialized null)
+            if(out == null) { throw new IOException("Haven't connected to database yet"); }
+            out.writeObject(message); } //You or Peer has closed the socket connection
+        catch (IOException e){ // Log Error sending data (some data is lost to the server) namely `message`
             logger.error("message {} could not be sent to server", new GsonBuilder().create().toJson(message), e);
+            //The peer socket closing will be detected & handled by the receive thread (doesn't have to be handled during send)
         }
     }
 
@@ -179,7 +144,7 @@ public class ServerConnector {
                                 break;
                             case SERVER:
                                 break;
-                            case DATABASE_COMMAND: //Server responses for Database Messages
+                            case DATABASE_RESPONSE: //Server responses for Database Messages
                                 databaseResponses.add((DatabaseResponseMessage) message);
                                 break;
                             case PING:
@@ -216,7 +181,7 @@ public class ServerConnector {
 
     public void disconnect(){
         isConnected = false; //Stops RECEIVE and HEARTBEAT threads
-        try{ if(socket != null) socket.close(); } //Unblocks any read() call and throws an exception / write() calls throw an exception
+        try{ if(socket != null) socket.close(); } //Unblocks any read() call and throws an exception / write() calls throw an Exception
         catch (IOException e){ logger.error("Could not close connection/socket", e); }
         logger.info("Client disconnected from server");
 

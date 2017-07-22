@@ -2,7 +2,6 @@ package com.charana.login_window.ui.reenter_password;
 
 import com.charana.login_window.ui.BaseController;
 import com.charana.login_window.ui.startup.StartUp_Controller;
-import com.charana.login_window.utilities.database.SQLiteDatabaseConnector;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -50,7 +49,7 @@ public class ReenterPassword_Controller extends BaseController implements Initia
         if(!newPassword.isEmpty()){
             if(newPassword.equals(reenterPasswordField.getText())){
                 if(popOver.isShowing()) popOver.hide();
-                boolean resetSuccessful = SQLiteDatabaseConnector.resetPassword(email, newPassword);
+                boolean resetSuccessful = startUp_controller.databaseConnector.resetPassword(email, newPassword);
                 if(resetSuccessful) { logger.debug("Password Reset"); }
                 else { logger.warn("Reset Failed"); }
                 this.startUp_controller.loadLoginEmailView();

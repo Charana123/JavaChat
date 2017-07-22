@@ -5,8 +5,8 @@ import com.charana.server.message.database_message.DatabaseCommandType;
 import java.util.UUID;
 
 public class ResetPasswordMessage extends DatabaseCommandMessage {
-    String email;
-    String newPassword;
+    public final String email;
+    public final String newPassword;
 
     public ResetPasswordMessage(UUID clientID, String email, String newPassword) {
         super(clientID, DatabaseCommandType.RESET_PASSWORD);

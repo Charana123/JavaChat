@@ -31,7 +31,8 @@ public class MainLauncher extends Application {
 
     public static void main(String[] args) {
         if(args.length != 2) {
-            System.out.println("java -jar server.jar [serverIP :: String] [serverPort :: int]");
+            System.out.println("java -jar client.jar [serverIP :: String] [serverPort :: int]");
+            System.exit(1);
         }
         try{
             serverIP = InetAddress.getByName(args[0]);
