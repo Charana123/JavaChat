@@ -1,5 +1,7 @@
 package com.charana.server;
 
+import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.support.ConnectionSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.net.InetAddress;
@@ -20,7 +22,7 @@ public class DatabaseConnectionPool {
     Logger logger = LoggerFactory.getLogger(DatabaseConnectionPool.class);
     int databaseServerPort;
     InetAddress databaseServerIP;
-    Queue<Connection> connectionPool = new LinkedList<>();
+    Queue<ConnectionSource> connectionPool = new LinkedList<>();
     AtomicInteger maxsize = new AtomicInteger(0);
     boolean moreConnections;
 
@@ -42,7 +44,7 @@ public class DatabaseConnectionPool {
             Class.forName("org.h2.Driver");
             for(int totalConnections = 0; totalConnections < prefConnections; totalConnections++){
                 try {
-                    Connection conn = createConnection();
+                    ConnectionSource conn = createConnection();
                     connectionPool.add(conn);
                 }
                 catch (SQLException e) { break; }
@@ -60,7 +62,7 @@ public class DatabaseConnectionPool {
      */
     //All operations that are public (that can be accesses by multiple threads)  and change the state of the mutable object
     //must synchronize so as to avoid inconsistency issues
-    public synchronized Connection getConnection() throws InterruptedException{
+    public synchronized ConnectionSource getConnection() throws InterruptedException{
         if(connectionPool.size() == 0) {
             if(moreConnections) {
                 try { return createConnection(); }
@@ -76,7 +78,7 @@ public class DatabaseConnectionPool {
      * Releases a connection back into the pool
      * @param connection The connection to be released
      */
-    public synchronized void closeConnection(Connection connection){
+    public synchronized void closeConnection(ConnectionSource connection){
         connectionPool.offer(connection);
         this.notify();
     }
@@ -96,9 +98,10 @@ public class DatabaseConnectionPool {
      * is set such that any futher getConnection() requests avoid createConnection() calls and instead wait for the queue to become
      * non-empty
      */
-    private Connection createConnection() throws SQLException {
+    private ConnectionSource createConnection() throws SQLException {
         try {
-            Connection conn = DriverManager.getConnection("jdbc:h2:tcp://" + databaseServerIP.getHostName() + ":" + databaseServerPort + "/~/database");
+            //Connection conn = DriverManager.getConnection("jdbc:h2:tcp://" + databaseServerIP.getHostName() + ":" + databaseServerPort + "/~/database");
+            ConnectionSource conn = new JdbcConnectionSource("jdbc:h2:tcp://" + databaseServerIP.getHostName() + ":" + databaseServerPort + "/~/database");
             maxsize.incrementAndGet();
             return conn;
         }
@@ -110,3 +113,27 @@ public class DatabaseConnectionPool {
     }
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

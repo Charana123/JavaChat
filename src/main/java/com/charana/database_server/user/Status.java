@@ -1,4 +1,4 @@
-package com.charana.login_window.utilities.database.user;
+package com.charana.database_server.user;
 
 public enum Status {
     ONLINE, OFFLINE, AWAY, DO_NOT_DISTURB, PENDING;

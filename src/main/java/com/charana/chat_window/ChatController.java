@@ -1,13 +1,16 @@
 package com.charana.chat_window;
 
-import com.charana.login_window.utilities.database.user.User;
+import com.charana.database_server.user.User;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.ListView;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
@@ -17,11 +20,21 @@ public class ChatController implements Initializable {
     @FXML ListView<UserSidebarButtonControl> recentContacts;
     ObservableList<UserSidebarButtonControl> recentContactsItemsView;
     ArrayList<UserSidebarButtonControl> userecentContactsItems;
+    User user;
+
+    private ChatController(){
+
+    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         //Anything code prior to scene populating (attaching listeners, loading data from model)
         recentContactsItemsView = recentContacts.getItems();
+
+        //TODO::Make an SQL Query to the Server to get a list of User objects which are Friends of the currently logged individual
+        //TODO:: What is the currently logged in individuals email ? but alongside email we should have all his other data
+        //TODO:: Should be during login use Constructor DI of the Users User object into the chat controller, which will populate other UI
+        //TODO:: elements
 
         loadRecentContacts();
     }
@@ -46,6 +59,21 @@ public class ChatController implements Initializable {
         //The observable list is then cleared and reset with the new ArrayList
 
     }
+
+    public static Stage chatWindow(){
+        FXMLLoader fxmlLoader = new FXMLLoader(ChatController.class.getResource("/views/chat_window/MainLoginView.fxml"));
+        try {
+            Parent root = fxmlLoader.load();
+            Stage chatStage = new Stage();
+            chatStage.setScene(new Scene(root));
+            return chatStage;
+        }
+        catch (IOException e){
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 
 }
 

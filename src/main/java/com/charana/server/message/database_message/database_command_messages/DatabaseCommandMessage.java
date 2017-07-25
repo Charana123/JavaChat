@@ -1,4 +1,4 @@
-package com.charana.server.message.database_message;
+package com.charana.server.message.database_message.database_command_messages;
 
 import com.charana.server.message.Message;
 import com.charana.server.message.MessageType;

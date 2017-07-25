@@ -1,5 +1,6 @@
 package com.charana.login_window.ui.startup;
 
+import com.charana.chat_window.ChatController;
 import com.charana.login_window.animations.SkypeLoadingAnimation;
 import com.charana.login_window.ui.create_account.CreateAccount_Controller;
 import com.charana.login_window.ui.forgot_password.ForgotPassword_Controller;
@@ -28,16 +29,16 @@ public class StartUp_Controller implements Initializable {
     private static Logger logger = LoggerFactory.getLogger(StartUp_Controller.class);
     @FXML VBox mainContainer;
     @FXML VBox contentContainer;
-    private Stage primaryStage;
+    private Stage loginStage;
     private InetAddress serverIP;
     private int serverPort;
     public final DatabaseConnector databaseConnector;
     Alert warningDialog;
 
-    public StartUp_Controller(Stage primaryStage, InetAddress serverIP, int serverPort){
+    public StartUp_Controller(Stage loginStage, InetAddress serverIP, int serverPort){
         this.serverIP = serverIP;
         this.serverPort = serverPort;
-        this.primaryStage = primaryStage;
+        this.loginStage = loginStage;
 
         warningDialog = new Alert(Alert.AlertType.WARNING);
         warningDialog.initModality(Modality.NONE);
@@ -79,6 +80,22 @@ public class StartUp_Controller implements Initializable {
         setContentContainer(vBox);
     }
 
+    public void showChatWindow(){
+        loadSkypeLoadingAnimation();
+
+        //Spawn a non-FX thread that will wait 2 seconds before posting a Runnable that switches windows on the runLater queue
+        new Thread(() -> {
+            try { Thread.sleep(2000); }
+            catch (InterruptedException e) { logger.error("JavaFX Application thread interrupted", e); return; }
+
+            Platform.runLater(() -> {
+                Stage chatWindow = ChatController.chatWindow();
+                loginStage.hide();
+                chatWindow.show();
+            });
+        }).start();
+    }
+
     public void loadReenterPasswordView(String email){
         Parent root = ReenterPassword_Controller.getInstance(this,  email);
         setContentContainer(root);
@@ -106,8 +123,8 @@ public class StartUp_Controller implements Initializable {
         });
     }
 
-    public Stage getPrimaryStage() {
-        return primaryStage;
+    public Stage getLoginStage() {
+        return loginStage;
     }
 
 }

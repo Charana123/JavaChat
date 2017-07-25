@@ -29,7 +29,7 @@ public class ForgotPassword_Controller extends BaseController implements Initial
     private String email;
     private static Logger logger = LoggerFactory.getLogger(ForgotPassword_Controller.class);
 
-    public ForgotPassword_Controller(String currentAccountKey, String email) {
+    private ForgotPassword_Controller(String currentAccountKey, String email) {
         this.currentAccountKey = currentAccountKey;
         this.email = email;
     }

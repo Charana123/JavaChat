@@ -1,6 +1,6 @@
 package com.charana.login_window.utilities.database;
 
-import com.charana.login_window.utilities.database.user.User;
+import com.charana.database_server.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

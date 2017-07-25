@@ -62,7 +62,7 @@ public class LoginPassword_Controller extends BaseController implements Initiali
         if(startUp_controller.databaseConnector.login(email, passwordField.getText())){
             if(popOver.isShowing()) popOver.hide();
             logger.debug("Successful Login");
-            this.startUp_controller.loadSkypeLoadingAnimation();
+            this.startUp_controller.showChatWindow();
             //TODO:: Redirect to Animation, Close StartUp window, Open Chat Window
         }
         else {

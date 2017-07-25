@@ -2,8 +2,7 @@ package com.charana.login_window.ui.create_account;
 
 import com.charana.login_window.ui.BaseController;
 import com.charana.login_window.ui.startup.StartUp_Controller;
-import com.charana.login_window.utilities.database.*;
-import com.charana.login_window.utilities.database.user.*;
+import com.charana.database_server.user.*;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -56,14 +55,15 @@ public class CreateAccount_Controller extends BaseController implements Initiali
     @FXML
     private void createAccount() {
         if(fieldsValid()){
-            User user = new User(
-                    null, //TODO:: Set in a profile pic in separate screen (or set a default profile picture)
+            User user = User.getInstance(
                     emailAddressField.getText(),
                     passwordField.getPassword(),
+                    null, //TODO:: Set in a profile pic in separate screen (or set a default profile picture)
                     new DisplayName(firstNameField.getText(), lastNameField.getText()),
                     Status.ONLINE,
                     Gender.valueOf(genderChooser.getValue()),
-                    new Birthday(Integer.parseInt(birthDay.getText()), Month.valueOf(birthMonthChooser.getValue()), Integer.parseInt(birthYear.getText())));
+                    new Birthday(Integer.parseInt(birthDay.getText()), Month.valueOf(birthMonthChooser.getValue()), Integer.parseInt(birthYear.getText())),
+                    null);
 
             if(!startUp_controller.databaseConnector.accountExists(emailAddressField.getText())){
                 startUp_controller.databaseConnector.createAccount(user);

@@ -1,13 +1,16 @@
 package com.charana.server;
 
-import com.charana.login_window.utilities.database.user.User;
+import com.charana.database_server.user.User;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class DatabaseConnector {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseConnector.class);
@@ -22,7 +25,7 @@ public class DatabaseConnector {
             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM Accounts WHERE Email=?");
             pstmt.setString(1, email);
             ResultSet rs = pstmt.executeQuery();
-            if(rs.next()){ //`if` instead of `while` because we only except 1 recor
+            if(rs.next()){ //`if` instead of `while` because we only except 1 row in the resultset
                 if(rs.getString("Password").equals(password)) {
                     logger.info("Successfully logged in");
                     return true;
@@ -99,6 +102,27 @@ public class DatabaseConnector {
         }
     }
 
+    public boolean getAccount(String email){
+        //TODO:: Query & Convert ResultSet into User Object to return
+        try{
+            QueryRunner queryRunner = new QueryRunner();
+            ResultSetHandler<List<User>> h = new BeanListHandler<>(User.class);
+            String query = "SELECT Accounts.* FROM Accounts INNER JOIN Friends ON Accounts.Email = Friends.FriendeeEmail WHERE Friends.FrienderEmail = ?";
+            List<User> friends = queryRunner.query(conn, query, h, email);
+            friends.forEach(user -> System.out.println(user));
+
+//            String query = "SELECT Accounts.* FROM Accounts INNER JOIN Friends ON Accounts.Email = Friends.FriendeeEmail WHERE Friends.FrienderEmail = ?";
+//            PreparedStatement pstmt = conn.prepareStatement(query);
+//            pstmt.setString(1,email);
+//            ResultSet rs = pstmt.executeQuery();
+//            printResultSet(rs);
+        }
+        catch (SQLException e){
+            e.printStackTrace();
+        }
+        return true;
+    }
+
 //    //SQLite only supports TYPE_FORWARD_ONLY and CONCUR_READ_ONLY cursors
 //    static private int getRows(ResultSet rs) throws SQLException {
 //        int rows = 0;
@@ -115,10 +139,35 @@ public class DatabaseConnector {
     }
 
     //Debugging only
-    private void printResultSet(ResultSet rs) throws SQLException {
-        while(rs.next()){
-            System.out.println(rs.getRow() + " " + rs.getString("Email"));
+    static private void printResultSet(ResultSet rs){ //TODO:: Function is a Functional Interface (make example)
+        try {
+            ResultSetMetaData metaData = rs.getMetaData();
+            List<String> columnNames = IntStream.range(1, metaData.getColumnCount() + 1).mapToObj(columnNumber -> {
+                try { return metaData.getColumnName(columnNumber); }
+                catch (SQLException e) { return "null"; }
+            }).collect(Collectors.toList());
+            while(rs.next()){
+                for (String columnName : columnNames) {
+                    System.out.println(columnName + "= " + rs.getString(columnName));
+                }
+                System.out.println("-----");
+            }
+            System.out.println("ResultSet END!");
         }
-        System.out.println("ResultSet END!");
+        catch (SQLException e){
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args){
+        try{
+            Class.forName("org.h2.Driver");
+            Connection connection = DriverManager.getConnection("jdbc:h2:tcp://localhost:9081/~/database");
+            DatabaseConnector dbConnector = new DatabaseConnector(connection);
+            dbConnector.getAccount("charananandasena@yahoo.com");
+        }
+        catch (ClassNotFoundException | SQLException e){
+            e.printStackTrace();
+        }
     }
 }

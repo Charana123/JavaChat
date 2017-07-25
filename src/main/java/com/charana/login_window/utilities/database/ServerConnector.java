@@ -4,7 +4,7 @@ import com.charana.login_window.ui.startup.StartUp_Controller;
 import com.charana.server.message.ConnectionMessage;
 import com.charana.server.message.Message;
 import com.charana.server.message.PingMessage;
-import com.charana.server.message.database_message.DatabaseResponseMessage;
+import com.charana.server.message.database_message.database_response_messages.DatabaseResponseMessage;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +25,7 @@ public class ServerConnector {
     private ObjectInputStream in;
     private Socket socket;
     Thread connect, receive, heartbeat;
-    volatile boolean isConnected;//Heartbeat
+    volatile boolean isConnected; //Heartbeat
     LinkedBlockingQueue<DatabaseResponseMessage> databaseResponses = new LinkedBlockingQueue<>();
 
 
@@ -37,7 +37,7 @@ public class ServerConnector {
         this.controller = controller;
         connectToServer();
 
-        controller.getPrimaryStage().setOnCloseRequest((event) -> {
+        controller.getLoginStage().setOnCloseRequest((event) -> {
             disconnect();
         });
     }
@@ -88,7 +88,7 @@ public class ServerConnector {
     }
 
     public boolean DequeueResponse(){
-        try{ return databaseResponses.take().result; }
+        try{ return databaseResponses.take().success; }
         catch (InterruptedException e){  //If the current thread is interrupted while being blocked
             logger.error("Thread interrupted during de-queue", e);
             return false;

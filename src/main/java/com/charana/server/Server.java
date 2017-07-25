@@ -1,14 +1,13 @@
 package com.charana.server;
 
 import com.charana.server.message.*;
-
-import com.charana.server.message.database_message.DatabaseCommandMessage;
-import com.charana.server.message.database_message.DatabaseResponseMessage;
-import com.charana.server.message.database_message.concrete_database_message.AccountExistsMessage;
-import com.charana.server.message.database_message.concrete_database_message.CreateAccountMessage;
-import com.charana.server.message.database_message.concrete_database_message.LoginMessage;
-import com.charana.server.message.database_message.concrete_database_message.ResetPasswordMessage;
+import com.charana.server.message.database_message.database_command_messages.*;
+import com.charana.server.message.database_message.database_command_messages.concrete_database_command_messages.*;
+import com.charana.server.message.database_message.database_response_messages.*;
+import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.*;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.j256.ormlite.support.ConnectionSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,8 +17,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
 import java.sql.Connection;
-import java.sql.Statement;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -70,14 +68,14 @@ public class Server {
         private ServerClient thisClient;
         private boolean hasConnected = false; //Whether client has send a connection message to register with the server
         private String clientName;
-        private DatabaseConnector dbconn;
+        private DatabaseConnectorORM dbconn;
 
         clientConnectionManager(Socket connection) throws InterruptedException{
             this.connection = connection;
             clientName = connection.getInetAddress().getHostAddress() + ":" + connection.getPort();
 
-            Connection conn = connectionPool.getConnection();
-            dbconn = new DatabaseConnector(conn);
+            ConnectionSource conn = connectionPool.getConnection();
+            dbconn = new DatabaseConnectorORM(conn);
         }
 
         @Override
@@ -155,6 +153,7 @@ public class Server {
                 case CREATE_ACCOUNT:
                     System.out.println("Create Account Message");
                     CreateAccountMessage createAccountMessage = (CreateAccountMessage) message;
+                    System.out.println(createAccountMessage.user.toString());
                     result = dbconn.createAccount(createAccountMessage.user);
                     send(new DatabaseResponseMessage(null, result));
                     break;
@@ -169,6 +168,8 @@ public class Server {
                     ResetPasswordMessage resetPasswordMessage = (ResetPasswordMessage) message;
                     result = dbconn.resetPassword(resetPasswordMessage.email, resetPasswordMessage.newPassword);
                     send(new DatabaseResponseMessage(null, result));
+                    break;
+                case GET_ACCOUNT:
                     break;
             }
         }
