@@ -5,6 +5,7 @@ public enum DatabaseCommandType {
     CREATE_ACCOUNT,
     ACCOUNT_EXISTS,
     RESET_PASSWORD,
-    GET_ACCOUNT
+    GET_ACCOUNT,
+    GET_FRIENDS
 
 }

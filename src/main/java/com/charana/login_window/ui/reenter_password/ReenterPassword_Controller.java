@@ -49,9 +49,10 @@ public class ReenterPassword_Controller extends BaseController implements Initia
         if(!newPassword.isEmpty()){
             if(newPassword.equals(reenterPasswordField.getText())){
                 if(popOver.isShowing()) popOver.hide();
-                boolean resetSuccessful = startUp_controller.databaseConnector.resetPassword(email, newPassword);
-                if(resetSuccessful) { logger.debug("Password Reset"); }
-                else { logger.warn("Reset Failed"); }
+                startUp_controller.databaseConnector.resetPassword(email, newPassword, (Boolean success) -> {
+                    if(success) logger.info("Password Reset");
+                    else logger.warn("Reset Failed");
+                });
                 this.startUp_controller.loadLoginEmailView();
             }
             else{

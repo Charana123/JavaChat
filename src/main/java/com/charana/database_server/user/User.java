@@ -10,22 +10,36 @@ import java.util.List;
 
 @DatabaseTable (tableName = "Users")
 public class User implements Serializable {
-    @DatabaseField (columnName = "Email", dataType = DataType.STRING, id = true)
+    @DatabaseField (columnName = NAME_FIELD_COLUMN_NAME, dataType = DataType.STRING, id = true)
     private String email;
-    @DatabaseField (columnName = "Password", dataType = DataType.STRING)
+    @DatabaseField (columnName = PASSWORD_FIELD_COLUMN_NAME, dataType = DataType.STRING)
     private String password;
-    @DatabaseField (columnName = "ProfileImage", dataType = DataType.SERIALIZABLE)
+    @DatabaseField (columnName = PROFILE_IMAGE_FIELD_COLUMN_NAME, dataType = DataType.SERIALIZABLE)
     private ProfileImage profileImage;
-    @DatabaseField (columnName = "DisplayName", dataType = DataType.SERIALIZABLE)
-    private DisplayName displayName;
-    @DatabaseField (columnName = "Status", dataType = DataType.ENUM_STRING)
+    @DatabaseField (columnName = FIRST_NAME_COLUMN_NAME, dataType = DataType.STRING)
+    private String firstName;
+    @DatabaseField (columnName = LAST_NAME_COLUMN_NAME, dataType = DataType.STRING)
+    private String lastName;
+    @DatabaseField (columnName = STATUS_FIELD_COLUMN_NAME, dataType = DataType.ENUM_STRING)
     private Status status;
-    @DatabaseField (columnName = "Gender", dataType = DataType.ENUM_STRING)
+    @DatabaseField (columnName = GENDER_FIELD_COLUMN_NAME, dataType = DataType.ENUM_STRING)
     private Gender gender;
-    @DatabaseField (columnName = "Birthday", dataType = DataType.SERIALIZABLE)
-    private Birthday birthday;
-    @DatabaseField (columnName = "Friends", dataType = DataType.SERIALIZABLE)
+    @DatabaseField (columnName = BIRTHDAY_FIELD_COLUMN_NAME, dataType = DataType.STRING)
+    private String birthday;
+    @DatabaseField (columnName = FRIENDS_FIELD_COLUMN_NAME, dataType = DataType.SERIALIZABLE)
     Friends friends;
+
+
+    public static final String NAME_FIELD_COLUMN_NAME = "Email";
+    public static final String PASSWORD_FIELD_COLUMN_NAME = "Password";
+    public static final String PROFILE_IMAGE_FIELD_COLUMN_NAME = "ProfileImage";
+    public static final String FIRST_NAME_COLUMN_NAME = "firstName";
+    public static final String LAST_NAME_COLUMN_NAME = "lastName";
+    public static final String STATUS_FIELD_COLUMN_NAME = "Status";
+    public static final String GENDER_FIELD_COLUMN_NAME = "Gender";
+    public static final String BIRTHDAY_FIELD_COLUMN_NAME = "Birthday";
+    public static final String FRIENDS_FIELD_COLUMN_NAME = "Friends";
+
 
     public User() {}
 
@@ -34,25 +48,13 @@ public class User implements Serializable {
         user.setEmail(email);
         user.setPassword(password);
         user.setProfileImage(profileImage);
-        user.setDisplayName(displayName);
+        user.setFirstName(displayName.firstName);
+        user.setLastName(displayName.lastName);
         user.setStatus(status);
         user.setGender(gender);
-        user.setBirthday(birthday);
+        user.setBirthday(birthday.toString());
         user.setFriends(friends);
         return user;
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "profileImage=" + profileImage +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", displayName=" + displayName +
-                ", status=" + status +
-                ", gender=" + gender +
-                ", birthday=" + birthday +
-                '}';
     }
 
     //GETTERS
@@ -66,23 +68,21 @@ public class User implements Serializable {
         return password;
     }
 
-    public String getDisplayName() {
-        return displayName.toString();
-    }
+    public Status getStatus() { return status; }
 
-    public String getStatus() { return status.name(); }
-
-    public String getGender() {
-        return gender.name();
+    public Gender getGender() {
+        return gender;
     }
 
     public String getBirthday() {
-        return birthday.toString();
+        return birthday;
     }
 
     public Friends getFriends() {
         return friends;
     }
+
+    public DisplayName getDisplayName() { return new DisplayName(firstName, lastName); }
 
     //SETTERS
     public void setProfileImage(ProfileImage profileImage) { this.profileImage = profileImage; }
@@ -91,18 +91,22 @@ public class User implements Serializable {
 
     public void setPassword(String password) { this.password = password; }
 
-    public void setDisplayName(DisplayName displayName) {
-        this.displayName = displayName;
-    }
-
     public void setStatus(Status status) { this.status = status; }
 
     public void setGender(Gender gender) { this.gender = gender; }
 
-    public void setBirthday(Birthday birthday) { this.birthday = birthday; }
+    public void setBirthday(String birthday) { this.birthday = birthday; }
 
     public void setFriends(Friends friends) {
         this.friends = friends;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 }
 

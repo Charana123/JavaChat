@@ -85,9 +85,9 @@ public class DatabaseConnector {
             PreparedStatement pstmt = conn.prepareStatement("INSERT INTO Accounts VALUES (?,?,?,?,?,?,?)");
             pstmt.setString(1, user.getEmail());
             pstmt.setString(2, user.getPassword());
-            pstmt.setString(3, user.getDisplayName());
+            pstmt.setString(3, user.getDisplayName().toString());
             pstmt.setString(4, null); //Status
-            pstmt.setString(5, user.getGender());
+            pstmt.setString(5, user.getGender().name());
             pstmt.setString(6, null); //About
             pstmt.setString(7, user.getBirthday());
             if(pstmt.executeUpdate() == 1){ //1 row was successfully created

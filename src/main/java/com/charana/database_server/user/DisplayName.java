@@ -2,8 +2,8 @@ package com.charana.database_server.user;
 
 import java.io.Serializable;
 
-public class DisplayName implements Serializable{
-    String firstName, lastName;
+public final class DisplayName implements Serializable{
+    final String firstName, lastName;
 
     public DisplayName(String firstName, String lastName){
         this.firstName = firstName;

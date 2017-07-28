@@ -3,10 +3,15 @@ package com.charana.login_window.utilities.database;
 import com.charana.database_server.user.User;
 import com.charana.server.message.Message;
 import com.charana.server.message.database_message.database_command_messages.concrete_database_command_messages.*;
+import com.charana.server.message.database_message.database_response_messages.DatabaseResponseMessage;
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetAccountResponseMessage;
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetFriendsResponseMessage;
+import javafx.application.Platform;
 
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 
 public class DatabaseConnector {
@@ -16,39 +21,70 @@ public class DatabaseConnector {
         this.serverConnector = serverConnector;
     }
 
-    public boolean login(String email, String password) {
-        serverConnector.send(new LoginMessage(null, email, password));
-        return serverConnector.DequeueResponse().success;
+    public void login(String email, String password, Consumer<Boolean> completionHandler) {
+        new Thread(() -> {
+            DatabaseResponseMessage response = sendAndRecieve(new LoginMessage(null, email, password));
+            Platform.runLater(() -> completionHandler.accept(response.success));
+        }).start();
     }
 
-    public boolean accountExists(String email){
-        serverConnector.send(new AccountExistsMessage(null, email));
-        return serverConnector.DequeueResponse().success;
+    public void accountExists(String email, Consumer<Boolean> completionHandler){
+        new Thread(() -> {
+            DatabaseResponseMessage response = sendAndRecieve(new AccountExistsMessage(null, email));
+            Platform.runLater(() -> completionHandler.accept(response.success));
+        }).start();
     }
 
-    public boolean resetPassword(String email, String newPassword){
-        serverConnector.send(new ResetPasswordMessage(null, email, newPassword));
-        return serverConnector.DequeueResponse().success;
+    public void resetPassword(String email, String newPassword, Consumer<Boolean> completionHandler){
+        new Thread(() -> {
+            DatabaseResponseMessage response = sendAndRecieve(new ResetPasswordMessage(null, email, newPassword));
+            Platform.runLater(() -> completionHandler.accept(response.success));
+        }).start();
     }
 
-    public boolean createAccount(User user){
-        serverConnector.send(new CreateAccountMessage(null, user));
-        return serverConnector.DequeueResponse().success;
+    //Does not require completionHandler
+    //Does not require anything (from the response) and therefore does not update anything based on the content of the response
+    public void createAccount(User user){
+        new Thread(() -> {
+            sendAndRecieve(new CreateAccountMessage(null, user));
+        }).start();
     }
 
-    public User getAccount(String email){
-        serverConnector.send(new GetAccountMessage(null, email));
-        return ((GetAccountResponseMessage) serverConnector.DequeueResponse()).user;
+    public void getAccount(String email, BiConsumer<Boolean, User> completionHandler){
+        new Thread(() -> {
+            GetAccountResponseMessage response = (GetAccountResponseMessage) sendAndRecieve(new GetAccountMessage(null, email));
+            Platform.runLater(() -> completionHandler.accept(response.success, response.user));
+        }).start();
     }
 
-    public List<User> getFriends(String email){
-        serverConnector.send(new GetFriendsMessage(null, email));
-        return ((GetFriendsResponseMessage) serverConnector.DequeueResponse()).friends;
+    public void getFriends(String email, BiConsumer<Boolean, List<User>> completionHandler){
+        new Thread(() -> {
+            GetFriendsResponseMessage response = (GetFriendsResponseMessage) sendAndRecieve(new GetFriendsMessage(null, email));
+            Platform.runLater(() -> completionHandler.accept(response.success, response.friends));
+        }).start();
     }
 
-    //TODO:: Set a onCompletionHandler, which is passed to the db access function
-    //TODO:: The db access function spins a thread that continously keeps trying to send the message to the server until it succeds
-    //TODO:: At which point it dequeues the response (if it takes longer than 1 second) it assumed the message wasn't sent back and retries sending
-    //TODO:: The call back is then called to update the UI in some way to notify the user
+    public DatabaseResponseMessage sendAndRecieve(Message message){
+        DatabaseResponseMessage responseMessage;
+        //If the message was not sent (true), we don't check to see if anything came (||). So we try sending again
+        //If the message was sent (false), check if response came back (||). If we didn't get a response (true). We try sending again.
+        //If the message was sent (false), check if response came back (||). If we get a response (false). We exit the loop.
+        //Because of the OR Statement (||) both have to evaluate to false for the while loop to exit. Therefore it is guaranteed that
+        //response message will be initialized with a non-null message if it exits the loop.
+        while(!serverConnector.send(message) || (responseMessage = serverConnector.DequeueResponse()) == null){
+            try { Thread.sleep(1000); }
+            catch (InterruptedException e) { } //TODO:: Log error and avoid callback
+        }
+        return responseMessage;
+    }
 
 }
+
+
+
+
+
+
+
+
+

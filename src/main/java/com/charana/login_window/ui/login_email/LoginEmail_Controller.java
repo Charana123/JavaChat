@@ -3,6 +3,7 @@ package com.charana.login_window.ui.login_email;
 
 import com.charana.login_window.ui.BaseController;
 import com.charana.login_window.ui.startup.StartUp_Controller;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -42,15 +43,14 @@ public class LoginEmail_Controller extends BaseController implements Initializab
     @FXML
     void login(){
         String email = emailField.getText();
-        boolean accountExists = startUp_controller.databaseConnector.accountExists(email);
-        if(accountExists) {
-            if(popOver.isShowing()) popOver.hide();
-            logger.debug("Account Exists");
-            this.startUp_controller.loadLoginPasswordView(email);
-        }
-        else {
-            popOver.show(emailField);
-        }
+        startUp_controller.databaseConnector.accountExists(email, (Boolean success) -> {
+            if(success) {
+                if(popOver.isShowing()) popOver.hide();
+                logger.debug("Account Exists");
+                this.startUp_controller.loadLoginPasswordView(email);
+            }
+            else { popOver.show(emailField); }
+        });
     }
 
     public static Parent getInstance(StartUp_Controller mainController){

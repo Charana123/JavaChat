@@ -1,8 +1,10 @@
 package com.charana.server;
 
 
+import com.charana.database_server.user.DisplayName;
 import com.charana.database_server.user.Friends;
 import com.charana.database_server.user.User;
+import com.google.gson.GsonBuilder;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.dao.GenericRawResults;
@@ -101,7 +103,7 @@ public class DatabaseConnectorORM {
             //Debugging
             List<String> friends = new ArrayList<>();
             friends.addAll(Arrays.asList("rajat@gmail.com", "albie@gmail.com"));
-            user.setFriends(Friends.getInstance(friends));
+            user.setFriends(new Friends(friends));
 
             int creates = userDAO.create(user);
             if(creates == 1){
@@ -131,6 +133,22 @@ public class DatabaseConnectorORM {
 //        return true;
 //    }
 
+    public User getAccount(String email){
+        try{
+            User user = userDAO.queryForId(email);
+            if(user == null) {
+                logger.info("No such user (email: {}) exists", email);
+                return null;
+            } else {
+                logger.info("User Found: User {}", new GsonBuilder().create().toJson(user));
+                return user;
+            }
+        } catch (SQLException e) {
+            logger.error("Getting user (email: {}) failed", email, e);
+            return null;
+        }
+    }
+
     public List<User> getFriends(String email){
         try{
             User user = userDAO.queryForId(email);
@@ -148,6 +166,17 @@ public class DatabaseConnectorORM {
             return null;
         }
     }
+
+    //public List<User> getPossibleMatches(DisplayName displayName){
+//        try{
+//
+//            User user = userDAO.queryForId(email);
+//            if (user != null){
+//            }
+//            else { return false; }
+//        }
+//        catch (SQLException)
+//    }
 
     //Debugging Only
     private void printRawResults(GenericRawResults<String[]> rawResults){

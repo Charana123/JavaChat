@@ -1,5 +1,6 @@
 package com.charana.server;
 
+import com.charana.database_server.user.User;
 import com.charana.server.message.*;
 import com.charana.server.message.database_message.database_command_messages.*;
 import com.charana.server.message.database_message.database_command_messages.concrete_database_command_messages.*;
@@ -89,6 +90,7 @@ public class Server {
                     try {
                         connection.setSoTimeout(5000);
                         Message messagefromClient = (Message) fromClientStream.readObject();
+                        logger.debug("Message recieved {}", messagefromClient);
                         processMessage(messagefromClient); }
                     //If message could not be read from client, ERROR + terminate current client manager thread
                     //A TCP connection must guarantee reliability of communication
@@ -145,31 +147,37 @@ public class Server {
             boolean result;
             switch (message.commandType){
                 case LOGIN:
-                    System.out.println("Login Message");
                     LoginMessage loginMessage = (LoginMessage) message;
                     result = dbconn.login(loginMessage.email, loginMessage.password);
                     send(new DatabaseResponseMessage(null, result));
                     break;
                 case CREATE_ACCOUNT:
-                    System.out.println("Create Account Message");
                     CreateAccountMessage createAccountMessage = (CreateAccountMessage) message;
-                    System.out.println(createAccountMessage.user.toString());
+                    System.out.println(" createAccountMessage RECIEVED");
                     result = dbconn.createAccount(createAccountMessage.user);
                     send(new DatabaseResponseMessage(null, result));
                     break;
                 case ACCOUNT_EXISTS:
-                    System.out.println("Account Exists Message");
                     AccountExistsMessage accountExistsMessage = (AccountExistsMessage) message;
+                    System.out.println("accountExistsMessage RECIEVED");
                     result = dbconn.accountExists(accountExistsMessage.email);
+                    System.out.println(result);
                     send(new DatabaseResponseMessage(null, result));
                     break;
                 case RESET_PASSWORD:
-                    System.out.println("Reset Password Message");
                     ResetPasswordMessage resetPasswordMessage = (ResetPasswordMessage) message;
                     result = dbconn.resetPassword(resetPasswordMessage.email, resetPasswordMessage.newPassword);
                     send(new DatabaseResponseMessage(null, result));
                     break;
                 case GET_ACCOUNT:
+                    GetAccountMessage getAccountMessage = (GetAccountMessage) message;
+                    User user = dbconn.getAccount(getAccountMessage.email);
+                    send(new GetAccountResponseMessage(null, (user != null), user));
+                    break;
+                case GET_FRIENDS:
+                    GetFriendsMessage getFriendsMessage = (GetFriendsMessage) message;
+                    List<User> friends = dbconn.getFriends(getFriendsMessage.email);
+                    send(new GetFriendsResponseMessage(null, (friends != null), friends));
                     break;
             }
         }

@@ -1,0 +1,24 @@
+/* The Vbox container is white, therefore if every control is transparent, the layout will appear white */
+.root *{
+    -fx-background-color: transparent;
+}
+
+.button{
+    -fx-background-color: transparent;
+    -fx-border-width: 0.1px;
+    -fx-border-color: black;
+    -fx-alignment: center-left;
+}
+
+.list-view {
+    -fx-padding: 0px;
+}
+
+.list-cell {
+    -fx-padding: 0px;
+}
+
+.glyph-icon {
+    -fx-text-fill: slategrey;
+    -fx-fill: slategrey;
+}

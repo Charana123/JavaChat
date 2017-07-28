@@ -1,5 +1,8 @@
-package com.charana.chat_window;
+package com.charana.chat_window.ui.main_view;
 
+import com.charana.chat_window.ui.contacts.add_contact.AddContactController;
+import com.charana.chat_window.ui.sidebar.UserSidebarButtonControl;
+import com.charana.chat_window.ui.contacts.ContactsMainController;
 import com.charana.database_server.user.User;
 import com.charana.login_window.BaseWindowController;
 import com.charana.login_window.utilities.database.DatabaseConnector;
@@ -10,20 +13,18 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-public class ChatController extends BaseWindowController implements Initializable {
+public class ChatController extends BaseWindowController implements Initializable, ViewSwapper {
 
     @FXML VBox contentContainer;
 
@@ -65,7 +66,7 @@ public class ChatController extends BaseWindowController implements Initializabl
     @FXML
     void viewContacts(){
         dbConnector.getFriends(user.getEmail(), (Boolean success, List<User> friends) -> {
-            Parent root = ContactsMainViewController.getInstance(user, friends);
+            Parent root = ContactsMainController.getInstance(user, friends, this);
             swapContent(root);
         });
     }
@@ -84,8 +85,16 @@ public class ChatController extends BaseWindowController implements Initializabl
         //The observable list is then cleared and reset with the new ArrayList
     }
 
+    //Interface - ViewSwapper implemented methods
+    public void viewAddContact(){
+        Parent root = AddContactController.getInstance(dbConnector);
+        swapContent(root);
+    }
+
+
+
     public static Stage chatWindow(User user, ServerConnector serverConnector){
-        FXMLLoader fxmlLoader = new FXMLLoader(ChatController.class.getResource("/views/chat_window/MainLoginView.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(ChatController.class.getResource("/views/chat_window/main_view/MainChatView.fxml"));
         try {
             Stage chatStage = new Stage();
             fxmlLoader.setController(new ChatController(chatStage, user, serverConnector));

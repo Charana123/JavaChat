@@ -59,15 +59,14 @@ public class LoginPassword_Controller extends BaseController implements Initiali
 
     @FXML
     private void login(){
-        if(startUp_controller.databaseConnector.login(email, passwordField.getText())){
-            if(popOver.isShowing()) popOver.hide();
-            logger.debug("Successful Login");
-            this.startUp_controller.showChatWindow();
-            //TODO:: Redirect to Animation, Close StartUp window, Open Chat Window
-        }
-        else {
-            if(!popOver.isShowing()) popOver.show(passwordField);
-        }
+        startUp_controller.databaseConnector.login(email, passwordField.getText(), (Boolean success) -> {
+            if(success){
+                if(popOver.isShowing()) popOver.hide();
+                logger.debug("Successful Login");
+                this.startUp_controller.showChatWindow(email);
+            }
+            else { if(!popOver.isShowing()) popOver.show(passwordField); }
+        });
     }
 
     public static Parent getInstance(StartUp_Controller mainController, String email){

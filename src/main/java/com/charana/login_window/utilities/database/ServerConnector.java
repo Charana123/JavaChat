@@ -1,5 +1,6 @@
 package com.charana.login_window.utilities.database;
 
+import com.charana.login_window.BaseWindowController;
 import com.charana.login_window.ui.startup.StartUp_Controller;
 import com.charana.server.message.ConnectionMessage;
 import com.charana.server.message.Message;
@@ -14,32 +15,32 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.*;
+import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class ServerConnector {
 //    private final InetAddress serverIP;
 //    private final int serverPort;
     private static final Logger logger = LoggerFactory.getLogger(ServerConnector.class);
-    StartUp_Controller controller;
     private ObjectOutputStream out;
     private ObjectInputStream in;
     private Socket socket;
     Thread connect, receive, heartbeat;
     volatile boolean isConnected; //Heartbeat
     LinkedBlockingQueue<DatabaseResponseMessage> databaseResponses = new LinkedBlockingQueue<>();
-
+    Optional<Consumer<Void>> hideWarningDialogCallbackOptional = Optional.empty();
+    Optional<BiConsumer<String,String>> showWarningDialogCallbackOptional = Optional.empty();
 
     final int serverPort;
     final InetAddress serverIP;
-    public ServerConnector(InetAddress serverIP, int serverPort, StartUp_Controller controller){
+    public ServerConnector(InetAddress serverIP, int serverPort){
+        //TODO:: The ServerBaseController should replace the previous hideWarningDialog with a new one.
         this.serverIP = serverIP;
         this.serverPort = serverPort;
-        this.controller = controller;
         connectToServer();
-
-        controller.getLoginStage().setOnCloseRequest((event) -> {
-            disconnect();
-        });
     }
 
     private void connectToServer(){
@@ -50,7 +51,7 @@ public class ServerConnector {
                     try { Thread.sleep(1000); } //Wait for 1 second before Re-Connecting
                     catch (InterruptedException e) { logger.error("Current thread interrupted", e); }
                 }
-                controller.hideWarningDialog();
+                hideWarningDialogCallbackOptional.ifPresent(voidConsumer -> voidConsumer.accept(null));
                 logger.info("Client successfully connected to server");
                 System.out.println("Screen Swap to Login Email");
             }
@@ -78,7 +79,7 @@ public class ServerConnector {
         }
         catch (ConnectException e){ //No server running on localhost
             logger.warn("Server not running", e);
-            controller.showWarningDialog("Failed to connect to Server", "Check if server is running (on localhost)");
+            showWarningDialogCallbackOptional.ifPresent(consumer -> consumer.accept("Failed to connect to Server", "Check if server is running (on localhost)"));
             return false;
         }
         catch (IOException e){ //(Actually a Socket Exception) No Internet Connectivity OR Invalid Port (if localhost)
@@ -87,21 +88,25 @@ public class ServerConnector {
         }
     }
 
-    public boolean DequeueResponse(){
-        try{ return databaseResponses.take().success; }
+    public DatabaseResponseMessage DequeueResponse(){
+        try{ return databaseResponses.poll(2, TimeUnit.SECONDS); } //Returns null if blocking exceded timeout.
         catch (InterruptedException e){  //If the current thread is interrupted while being blocked
             logger.error("Thread interrupted during de-queue", e);
-            return false;
+            return null;
         }
     }
 
-    public void send(Message message){
+    public boolean send(Message message){
+        logger.debug("Sending message {}", message);
         try{ //Haven't previously connected to the database (out is still not initialized null)
             if(out == null) { throw new IOException("Haven't connected to database yet"); }
-            out.writeObject(message); } //You or Peer has closed the socket connection
-        catch (IOException e){ // Log Error sending data (some data is lost to the server) namely `message`
+            out.writeObject(message); //Throws an exception if YOU or PEER has closed the socket connection.
+            return true;
+        }
+        catch (IOException e){ // Log Error. sending data of some data has been lost namely `message`
             logger.error("message {} could not be sent to server", new GsonBuilder().create().toJson(message), e);
             //The peer socket closing will be detected & handled by the receive thread (doesn't have to be handled during send)
+            return false;
         }
     }
 
@@ -191,6 +196,11 @@ public class ServerConnector {
         disconnect();
         System.out.println("Swap screen to Internet Connectivity Unavailable");
         connectToServer();
+    }
+
+    public void setWarningDialogCallbacks(Consumer<Void> hideWarningDialogCallback, BiConsumer<String,String> showWarningDialogCallback){
+        this.hideWarningDialogCallbackOptional = Optional.of(hideWarningDialogCallback);
+        this.showWarningDialogCallbackOptional = Optional.of(showWarningDialogCallback);
     }
 }
 

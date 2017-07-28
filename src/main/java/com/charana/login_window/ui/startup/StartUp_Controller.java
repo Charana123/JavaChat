@@ -1,6 +1,8 @@
 package com.charana.login_window.ui.startup;
 
-import com.charana.chat_window.ChatController;
+import com.charana.chat_window.ui.main_view.ChatController;
+import com.charana.database_server.user.User;
+import com.charana.login_window.BaseWindowController;
 import com.charana.login_window.animations.SkypeLoadingAnimation;
 import com.charana.login_window.ui.create_account.CreateAccount_Controller;
 import com.charana.login_window.ui.forgot_password.ForgotPassword_Controller;
@@ -9,14 +11,11 @@ import com.charana.login_window.ui.login_password.LoginPassword_Controller;
 import com.charana.login_window.ui.reenter_password.ReenterPassword_Controller;
 import com.charana.login_window.utilities.database.DatabaseConnector;
 import com.charana.login_window.utilities.database.ServerConnector;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
-import javafx.scene.control.Alert;
 import javafx.scene.layout.VBox;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,25 +24,27 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class StartUp_Controller implements Initializable {
+public class StartUp_Controller extends BaseWindowController implements Initializable {
     private static Logger logger = LoggerFactory.getLogger(StartUp_Controller.class);
     @FXML VBox mainContainer;
     @FXML VBox contentContainer;
     private Stage loginStage;
     private InetAddress serverIP;
     private int serverPort;
+    public final ServerConnector serverConnector;
     public final DatabaseConnector databaseConnector;
-    Alert warningDialog;
+
 
     public StartUp_Controller(Stage loginStage, InetAddress serverIP, int serverPort){
+        super();
         this.serverIP = serverIP;
         this.serverPort = serverPort;
         this.loginStage = loginStage;
-
-        warningDialog = new Alert(Alert.AlertType.WARNING);
-        warningDialog.initModality(Modality.NONE);
-
-        ServerConnector serverConnector = new ServerConnector(serverIP, serverPort, this);
+        this.serverConnector = new ServerConnector(serverIP, serverPort);
+        serverConnector.setWarningDialogCallbacks(
+                (Void voidz) -> hideWarningDialog(),
+                (String warningHeader, String warningContent) -> showWarningDialog(warningHeader, warningContent));
+        loginStage.setOnCloseRequest(event -> serverConnector.disconnect() );
         this.databaseConnector = new DatabaseConnector(serverConnector);
     }
 
@@ -80,16 +81,15 @@ public class StartUp_Controller implements Initializable {
         setContentContainer(vBox);
     }
 
-    public void showChatWindow(){
+    public void showChatWindow(String email){
         loadSkypeLoadingAnimation();
 
         //Spawn a non-FX thread that will wait 2 seconds before posting a Runnable that switches windows on the runLater queue
         new Thread(() -> {
             try { Thread.sleep(2000); }
             catch (InterruptedException e) { logger.error("JavaFX Application thread interrupted", e); return; }
-
-            Platform.runLater(() -> {
-                Stage chatWindow = ChatController.chatWindow();
+            databaseConnector.getAccount(email, (Boolean success, User user) -> {
+                Stage chatWindow = ChatController.chatWindow(user, serverConnector);
                 loginStage.hide();
                 chatWindow.show();
             });
@@ -104,23 +104,6 @@ public class StartUp_Controller implements Initializable {
     private void setContentContainer(Parent layout){
         contentContainer.getChildren().removeAll(contentContainer.getChildren());
         contentContainer.getChildren().add(layout);
-    }
-
-    public void showWarningDialog(String warningHeader, String warningContent){
-        if(!warningDialog.isShowing()) {
-            Platform.runLater(() -> {
-                warningDialog.setTitle("Warning");
-                warningDialog.setHeaderText(warningHeader);
-                warningDialog.setContentText(warningContent);
-                warningDialog.show(); //Non-Blocking
-            });
-        }
-    }
-
-    public void hideWarningDialog(){
-        Platform.runLater(() -> {
-            if(warningDialog.isShowing()) warningDialog.close();
-        });
     }
 
     public Stage getLoginStage() {

@@ -27,13 +27,13 @@
       </HBox>
    </top>
    <left>
-      <VBox prefHeight="573.0" prefWidth="170.0" stylesheets="@../../css/chat_window/SidebarStylesheet.css" BorderPane.alignment="CENTER">
+      <VBox prefHeight="573.0" prefWidth="170.0" styleClass="vbox" stylesheets="@../../../css/chat_window/main_view/SidebarStylesheet.css" BorderPane.alignment="CENTER">
          <children>
             <Button mnemonicParsing="false" prefHeight="50.0" prefWidth="170.0" text="Home">
                <graphic>
                   <FontAwesomeIconView glyphName="HOME" size="24.0" />
                </graphic></Button>
-            <Button mnemonicParsing="false" prefHeight="50.0" prefWidth="180.0" text="Contacts">
+            <Button mnemonicParsing="false" onAction="#viewContacts" prefHeight="50.0" prefWidth="180.0" text="Contacts">
                <graphic>
                   <FontAwesomeIconView glyphName="BOOK" size="24.0" />
                </graphic>
@@ -45,21 +45,15 @@
                <font>
                   <Font name="Arial Bold" size="13.0" />
                </font></Label>
-            <ScrollPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308">
+            <ScrollPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="460.0" prefWidth="170.0">
                <content>
-                  <ListView maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" />
+                  <ListView fx:id="recentContacts" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="442.0" prefWidth="151.0" />
                </content>
             </ScrollPane>
          </children>
       </VBox>
    </left>
    <center>
-      <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
-         <children>
-            <HBox prefHeight="100.0" prefWidth="200.0" />
-            <ListView prefHeight="498.0" prefWidth="940.0" />
-            <HBox prefHeight="100.0" prefWidth="200.0" />
-         </children>
-      </VBox>
+      <VBox fx:id="contentContainer" prefHeight="575.0" prefWidth="870.0" style="-fx-background-color: white;" BorderPane.alignment="CENTER" />
    </center>
 </BorderPane>

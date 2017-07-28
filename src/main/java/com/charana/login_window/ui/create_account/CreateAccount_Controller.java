@@ -11,10 +11,14 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
@@ -54,25 +58,33 @@ public class CreateAccount_Controller extends BaseController implements Initiali
 
     @FXML
     private void createAccount() {
-        if(fieldsValid()){
-            User user = User.getInstance(
-                    emailAddressField.getText(),
-                    passwordField.getPassword(),
-                    null, //TODO:: Set in a profile pic in separate screen (or set a default profile picture)
-                    new DisplayName(firstNameField.getText(), lastNameField.getText()),
-                    Status.ONLINE,
-                    Gender.valueOf(genderChooser.getValue()),
-                    new Birthday(Integer.parseInt(birthDay.getText()), Month.valueOf(birthMonthChooser.getValue()), Integer.parseInt(birthYear.getText())),
-                    null);
+        try {
+            File file = new File(getClass().getResource("/images/chat_window/profile_images/skype-default-avatar.jpg").toURI());
+            FileInputStream fileInputStream = new FileInputStream(file);
+            byte[] skypeDefaultImage = IOUtils.toByteArray(fileInputStream);
 
-            if(!startUp_controller.databaseConnector.accountExists(emailAddressField.getText())){
-                startUp_controller.databaseConnector.createAccount(user);
-                logger.debug("Account Created");
-                this.startUp_controller.loadLoginEmailView();
+            if (fieldsValid()) {
+                User user = User.getInstance(
+                        emailAddressField.getText(),
+                        passwordField.getPassword(),
+                        new ProfileImage(skypeDefaultImage),
+                        new DisplayName(firstNameField.getText(), lastNameField.getText()),
+                        Status.ONLINE,
+                        Gender.valueOf(genderChooser.getValue()),
+                        new Birthday(Integer.parseInt(birthDay.getText()), Month.valueOf(birthMonthChooser.getValue()), Integer.parseInt(birthYear.getText())),
+                        null);
+
+                startUp_controller.databaseConnector.accountExists(emailAddressField.getText(), (Boolean exists) -> {
+                    if(!exists){
+                        startUp_controller.databaseConnector.createAccount(user);
+                        logger.info("Account Created");
+                        this.startUp_controller.loadLoginEmailView();
+                    }
+                    else { logger.info("Account Exists");}
+                });
             }
-            else {
-                logger.debug("Account Exists");
-            }
+        } catch (URISyntaxException | IOException e){
+            logger.error("Failure loading default skype avatar", e);
         }
     }
 

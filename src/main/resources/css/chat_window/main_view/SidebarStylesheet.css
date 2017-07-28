@@ -1,5 +1,10 @@
 .root *{
-    -fx-background-color: white;
+    -fx-background-color: rgb(249, 251, 253); /* Skype light light blue */
+}
+
+.vbox {
+    -fx-border-width: 0.5px;
+    -fx-border-color: black;
 }
 
 .button{
@@ -8,7 +13,7 @@
 }
 
 .button:hover {
-    -fx-background-color: lightblue; /* Skype light blue */
+    -fx-background-color: rgb(226, 238, 246); /* Skype light blue */
     -fx-font-weight: bold;
     -fx-font-size: 1.2em;
 }
