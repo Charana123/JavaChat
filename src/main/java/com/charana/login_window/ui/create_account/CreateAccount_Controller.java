@@ -11,6 +11,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,20 +60,22 @@ public class CreateAccount_Controller extends BaseController implements Initiali
     @FXML
     private void createAccount() {
         try {
-            File file = new File(getClass().getResource("/images/chat_window/profile_images/skype-default-avatar.jpg").toURI());
+            String filePath = "/images/chat_window/profile_images/skype-default-avatar.jpg";
+            File file = new File(getClass().getResource(filePath).toURI());
             FileInputStream fileInputStream = new FileInputStream(file);
             byte[] skypeDefaultImage = IOUtils.toByteArray(fileInputStream);
+            String format = FilenameUtils.getExtension(filePath);
+            ProfileImage profileImage = new ProfileImage(skypeDefaultImage, format);
 
             if (fieldsValid()) {
-                User user = User.getInstance(
+                User user = new User(
                         emailAddressField.getText(),
                         passwordField.getPassword(),
-                        new ProfileImage(skypeDefaultImage),
+                        profileImage,
                         new DisplayName(firstNameField.getText(), lastNameField.getText()),
                         Status.ONLINE,
                         Gender.valueOf(genderChooser.getValue()),
-                        new Birthday(Integer.parseInt(birthDay.getText()), Month.valueOf(birthMonthChooser.getValue()), Integer.parseInt(birthYear.getText())),
-                        null);
+                        new Birthday(Integer.parseInt(birthDay.getText()), Month.valueOf(birthMonthChooser.getValue()), Integer.parseInt(birthYear.getText())));
 
                 startUp_controller.databaseConnector.accountExists(emailAddressField.getText(), (Boolean exists) -> {
                     if(!exists){

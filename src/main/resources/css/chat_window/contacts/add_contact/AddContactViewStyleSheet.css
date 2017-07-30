@@ -1,15 +1,21 @@
-/* The Vbox container is white, therefore if every control is transparent, the layout will appear white */
-.root *{
-    -fx-background-color: transparent;
-}
-
 .label1-vbox-vbox-vbox{
     -fx-font-family: Arial;
-    -fx-font-size: 16;
+    -fx-font-size: 16px;
     -fx-font-weight: bold;
 }
 
 .label2-vbox-vbox-vbox{
     -fx-font-family: Arial;
-    -fx-font-size: 13;
+    -fx-font-size: 13px;
+}
+
+.list-view {
+    -fx-padding: 0px;
+}
+
+.list-cell {
+    -fx-padding: 0px;
+    -fx-background-color: white;
+    -fx-border-width: 0.1px 0px 0.1px 0px;
+    -fx-border-color: black;
 }

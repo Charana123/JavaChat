@@ -6,13 +6,12 @@ import java.io.Serializable;
 
 public class ProfileImage implements Serializable{
 
-    final byte[] image;
+    public final byte[] image;
+    public final String format;
 
-    public ProfileImage(byte[] image){
+    public ProfileImage(byte[] image, String extension){
         this.image = image;
+        this.format = extension;
     }
 
-    public byte[] getImage() {
-        return image;
-    }
 }

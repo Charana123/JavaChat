@@ -40,7 +40,11 @@ public class UserContactButtonControl extends HBox implements Initializable{
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        ImageView profilePicture = new ImageView(new Image(new ByteArrayInputStream(user.getProfileImage().getImage())));
+        ImageView profilePicture = new ImageView(
+                new Image(
+                        new ByteArrayInputStream(
+                                user.getProfileImage()
+                                        .image)));
         double imageDimension = 40;
         profilePicture.setFitHeight(imageDimension); profilePicture.setFitWidth(imageDimension);
         profilePicture.setClip(new Circle(imageDimension/2, imageDimension/2, imageDimension/2));

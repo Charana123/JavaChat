@@ -1,11 +1,15 @@
 package com.charana.login_window.utilities.database;
 
+import com.charana.database_server.user.AddFriendNotification;
+import com.charana.database_server.user.DisplayName;
 import com.charana.database_server.user.User;
 import com.charana.server.message.Message;
 import com.charana.server.message.database_message.database_command_messages.concrete_database_command_messages.*;
 import com.charana.server.message.database_message.database_response_messages.DatabaseResponseMessage;
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetAccountResponseMessage;
+import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetAddFriendNotificationsResponseMessage;
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetFriendsResponseMessage;
+import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetPossibleUsersResponseMessage;
 import javafx.application.Platform;
 
 import java.util.List;
@@ -64,7 +68,21 @@ public class DatabaseConnector {
         }).start();
     }
 
-    public DatabaseResponseMessage sendAndRecieve(Message message){
+    public void getPossibleUsers(DisplayName displayName, BiConsumer<Boolean, List<User>> completionHandler){
+        new Thread(() -> {
+            GetPossibleUsersResponseMessage response = (GetPossibleUsersResponseMessage) sendAndRecieve(new GetPossibleUsersMessage(null, displayName));
+            Platform.runLater(() -> completionHandler.accept(response.success, response.possibleUsers));
+        }).start();
+    }
+
+    public void getAddFriendNotifications(String email, BiConsumer<Boolean, List<AddFriendNotification>> completionHandler){
+        new Thread(() -> {
+            GetAddFriendNotificationsResponseMessage response = (GetAddFriendNotificationsResponseMessage) sendAndRecieve(new GetAddFriendNotificationsMessage(null , email));
+            Platform.runLater(() -> completionHandler.accept(response.success, response.addFriendNotifications));
+        }).start();
+    }
+
+    private DatabaseResponseMessage sendAndRecieve(Message message){
         DatabaseResponseMessage responseMessage;
         //If the message was not sent (true), we don't check to see if anything came (||). So we try sending again
         //If the message was sent (false), check if response came back (||). If we didn't get a response (true). We try sending again.

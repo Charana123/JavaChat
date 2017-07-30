@@ -162,7 +162,7 @@ public class DatabaseConnector {
     public static void main(String[] args){
         try{
             Class.forName("org.h2.Driver");
-            Connection connection = DriverManager.getConnection("jdbc:h2:tcp://localhost:9081/~/database");
+            Connection connection = DriverManager.getConnection("jdbc:h2:tcp://localhost:9081/~/Desktop/Application/database");
             DatabaseConnector dbConnector = new DatabaseConnector(connection);
             dbConnector.getAccount("charananandasena@yahoo.com");
         }

@@ -32,7 +32,7 @@ public class UserSidebarButtonControl extends Button {
         setAlignment(Pos.CENTER_LEFT);
 
         //Load and shape profile image
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(user.getProfileImage().getImage());
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(user.getProfileImage().image);
         ImageView imageView = new ImageView(new Image(byteArrayInputStream));
         imageView.setFitHeight(imageRadius*2); imageView.setFitWidth(imageRadius*2);
         Circle clip = new Circle(imageRadius, imageRadius, imageRadius);

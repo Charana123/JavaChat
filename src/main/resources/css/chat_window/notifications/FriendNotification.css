@@ -1,0 +1,25 @@
+.button {
+
+}
+
+.accept-button-hbox {
+    -fx-background-color: green;
+    -fx-text-fill: white;
+}
+
+.reject-button-hbox {
+    -fx-background-color: red;
+    -fx-text-fill: white;
+}
+
+.content-button-hbox{
+    -fx-background-color: transparent;
+    -fx-text-fill: blue;
+}
+
+.hbox {
+    -fx-background-color: white;
+    -fx-border-width: 0.2px;
+    -fx-border-color: black;
+}
+

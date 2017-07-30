@@ -1,5 +1,6 @@
 package com.charana.chat_window.ui.contacts.add_contact;
 
+import com.sun.istack.internal.NotNull;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.animation.*;
@@ -28,12 +29,15 @@ public class AddContactSearchBar extends HBox implements Initializable {
     static final String noGlowStyle = "-fx-background-color: transparent;";
 
 
-    public AddContactSearchBar(Consumer<String> onFindHandler){
+    public AddContactSearchBar(@NotNull Consumer<String> onFindHandler){
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/chat_window/contacts/add_contact/AddContactSearchBar.fxml"));
         fxmlLoader.setRoot(this);
         fxmlLoader.setController(this);
         try { fxmlLoader.load(); }
         catch(IOException e) { e.printStackTrace(); }
+
+        findButton.setOnMouseClicked(event -> onFindHandler.accept(searchBar.getText()));
+        searchBar.setOnAction(event -> onFindHandler.accept(searchBar.getText()));
     }
 
     @Override

@@ -1,8 +1,11 @@
 package com.charana.chat_window.ui.main_view;
 
 import com.charana.chat_window.ui.contacts.add_contact.AddContactController;
+import com.charana.chat_window.ui.notification_tab.FriendNotificationControl;
+import com.charana.chat_window.ui.notification_tab.NotificationPopoverControl;
 import com.charana.chat_window.ui.sidebar.UserSidebarButtonControl;
 import com.charana.chat_window.ui.contacts.ContactsMainController;
+import com.charana.database_server.user.AddFriendNotification;
 import com.charana.database_server.user.User;
 import com.charana.login_window.BaseWindowController;
 import com.charana.login_window.utilities.database.DatabaseConnector;
@@ -13,9 +16,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.controlsfx.control.PopOver;
 
 import java.io.IOException;
 import java.net.URL;
@@ -29,6 +34,7 @@ public class ChatController extends BaseWindowController implements Initializabl
     @FXML VBox contentContainer;
 
     @FXML ListView<UserSidebarButtonControl> recentContacts;
+    @FXML Button notificationsButton;
     ObservableList<UserSidebarButtonControl> recentContactsItemsView;
     ArrayList<UserSidebarButtonControl> userecentContactsItems;
     private final ServerConnector serverConnector;
@@ -68,6 +74,21 @@ public class ChatController extends BaseWindowController implements Initializabl
         dbConnector.getFriends(user.getEmail(), (Boolean success, List<User> friends) -> {
             Parent root = ContactsMainController.getInstance(user, friends, this);
             swapContent(root);
+        });
+    }
+
+    @FXML
+    void viewFriendNotifications(){
+        dbConnector.getAddFriendNotifications(user.getEmail(), (Boolean success, List<AddFriendNotification> addFriendNotifications) -> {
+            if(success){ //TODO:: Success shoud be changed to a failed DB call, currently if we have 0 notifications, nothing will happen,
+                //TODO:: which isn't the definition of a `Successful` database call
+                List<FriendNotificationControl> friendNotificationControls = addFriendNotifications.stream().map(addFriendNotification -> {
+                    return new FriendNotificationControl(addFriendNotification.getDisplayName(), addFriendNotification.getProfileImage());
+                }).collect(Collectors.toList());
+                PopOver popOver = new NotificationPopoverControl(friendNotificationControls);
+                popOver.setAnimated(false);
+                popOver.show(notificationsButton);
+            }
         });
     }
 

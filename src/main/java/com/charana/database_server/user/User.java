@@ -1,12 +1,12 @@
 package com.charana.database_server.user;
 
+import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
-import javafx.scene.image.Image;
 
 import java.io.Serializable;
-import java.util.List;
 
 @DatabaseTable (tableName = "Users")
 public class User implements Serializable {
@@ -14,8 +14,8 @@ public class User implements Serializable {
     private String email;
     @DatabaseField (columnName = PASSWORD_FIELD_COLUMN_NAME, dataType = DataType.STRING)
     private String password;
-    @DatabaseField (columnName = PROFILE_IMAGE_FIELD_COLUMN_NAME, dataType = DataType.SERIALIZABLE)
-    private ProfileImage profileImage;
+    @DatabaseField (columnName = PROFILE_IMAGE_METADATA_FIELD_COLUMN_NAME, dataType = DataType.STRING)
+    private String profileImageMetaData;
     @DatabaseField (columnName = FIRST_NAME_COLUMN_NAME, dataType = DataType.STRING)
     private String firstName;
     @DatabaseField (columnName = LAST_NAME_COLUMN_NAME, dataType = DataType.STRING)
@@ -26,87 +26,68 @@ public class User implements Serializable {
     private Gender gender;
     @DatabaseField (columnName = BIRTHDAY_FIELD_COLUMN_NAME, dataType = DataType.STRING)
     private String birthday;
-    @DatabaseField (columnName = FRIENDS_FIELD_COLUMN_NAME, dataType = DataType.SERIALIZABLE)
-    Friends friends;
+    @ForeignCollectionField (eager = false)
+    ForeignCollection<Friend> friends;
+    @ForeignCollectionField (eager = false)
+    ForeignCollection<AddFriendNotification> addFriendNotifications;
 
+    private ProfileImage profileImage;
 
     public static final String NAME_FIELD_COLUMN_NAME = "Email";
     public static final String PASSWORD_FIELD_COLUMN_NAME = "Password";
-    public static final String PROFILE_IMAGE_FIELD_COLUMN_NAME = "ProfileImage";
+    public static final String PROFILE_IMAGE_METADATA_FIELD_COLUMN_NAME = "ProfileImageMetaData";
     public static final String FIRST_NAME_COLUMN_NAME = "firstName";
     public static final String LAST_NAME_COLUMN_NAME = "lastName";
     public static final String STATUS_FIELD_COLUMN_NAME = "Status";
     public static final String GENDER_FIELD_COLUMN_NAME = "Gender";
     public static final String BIRTHDAY_FIELD_COLUMN_NAME = "Birthday";
-    public static final String FRIENDS_FIELD_COLUMN_NAME = "Friends";
-
 
     public User() {}
 
-    public static User getInstance(String email, String password, ProfileImage profileImage, DisplayName displayName, Status status, Gender gender, Birthday birthday, Friends friends) {
-        User user = new User();
-        user.setEmail(email);
-        user.setPassword(password);
-        user.setProfileImage(profileImage);
-        user.setFirstName(displayName.firstName);
-        user.setLastName(displayName.lastName);
-        user.setStatus(status);
-        user.setGender(gender);
-        user.setBirthday(birthday.toString());
-        user.setFriends(friends);
-        return user;
+    public User(String email){
+        this.email = email;
+    }
+
+    public User(String email, String password, ProfileImage profileImage, DisplayName displayName, Status status, Gender gender, Birthday birthday) {
+        this.email = email;
+        this.password = password;
+        this.profileImage = profileImage;
+        this.firstName = displayName.firstName;
+        this.lastName = displayName.lastName;
+        this.status = status;
+        this.gender = gender;
+        this.birthday = birthday.toString();
     }
 
     //GETTERS
     public ProfileImage getProfileImage() { return profileImage; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getEmail() { return email; }
 
-    public String getPassword() {
-        return password;
-    }
+    public String getPassword() { return password; }
 
     public Status getStatus() { return status; }
 
-    public Gender getGender() {
-        return gender;
-    }
+    public Gender getGender() { return gender; }
 
-    public String getBirthday() {
-        return birthday;
-    }
-
-    public Friends getFriends() {
-        return friends;
-    }
+    public String getBirthday() { return birthday; }
 
     public DisplayName getDisplayName() { return new DisplayName(firstName, lastName); }
 
+    public ForeignCollection<Friend> getFriends() { return friends; }
+
+    public String getProfileImageMetaData() { return profileImageMetaData; }
+
+    public ForeignCollection<AddFriendNotification> getAddFriendNotifications() { return addFriendNotifications; }
+
     //SETTERS
+    public void setProfileImageMetaData(String profileImageMetaData) { this.profileImageMetaData = profileImageMetaData; }
+
     public void setProfileImage(ProfileImage profileImage) { this.profileImage = profileImage; }
 
-    public void setEmail(String email) { this.email = email; }
-
-    public void setPassword(String password) { this.password = password; }
-
-    public void setStatus(Status status) { this.status = status; }
-
-    public void setGender(Gender gender) { this.gender = gender; }
-
-    public void setBirthday(String birthday) { this.birthday = birthday; }
-
-    public void setFriends(Friends friends) {
-        this.friends = friends;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
+    @Override
+    public int hashCode() {
+        return email.hashCode();
     }
 }
 

@@ -102,7 +102,7 @@ public class DatabaseConnectionPool {
     private ConnectionSource createConnection() throws SQLException {
         try {
             //Connection conn = DriverManager.getConnection("jdbc:h2:tcp://" + databaseServerIP.getHostName() + ":" + databaseServerPort + "/~/database");
-            ConnectionSource conn = new JdbcConnectionSource("jdbc:h2:tcp://" + databaseServerIP.getHostName() + ":" + databaseServerPort + "/~/database");
+            ConnectionSource conn = new JdbcConnectionSource("jdbc:h2:tcp://" + databaseServerIP.getHostName() + ":" + databaseServerPort + "/~/Desktop/Application/database");
             maxsize.incrementAndGet();
             return conn;
         }

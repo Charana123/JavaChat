@@ -3,8 +3,8 @@ package com.charana.database_server.user;
 import java.io.Serializable;
 
 public final class Birthday implements Serializable{
-    final Integer day, year;
-    final Month month;
+    public final Integer day, year;
+    public final Month month;
 
     public Birthday(Integer day, Month month, Integer year) {
         this.day = day;

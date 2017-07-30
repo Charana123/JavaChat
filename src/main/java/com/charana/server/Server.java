@@ -1,21 +1,22 @@
 package com.charana.server;
 
+import com.charana.database_server.user.AddFriendNotification;
+import com.charana.database_server.user.ProfileImage;
 import com.charana.database_server.user.User;
 import com.charana.server.message.*;
 import com.charana.server.message.database_message.database_command_messages.*;
 import com.charana.server.message.database_message.database_command_messages.concrete_database_command_messages.*;
 import com.charana.server.message.database_message.database_response_messages.*;
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.*;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.j256.ormlite.support.ConnectionSource;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.EOFException;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import javax.imageio.stream.ImageInputStream;
+import java.io.*;
 import java.net.*;
 import java.sql.Connection;
 import java.util.*;
@@ -25,6 +26,7 @@ import java.util.Objects;
 
 public class Server {
     public final int serverPort = 8192;
+    public final String storagePath = "/Users/Charana/Desktop/Application/";
     private final Logger logger = LoggerFactory.getLogger(Server.class);
     private boolean serverisRunning;
     //Such that only one client manager thread can be broadcasting a message to all other clients
@@ -153,13 +155,12 @@ public class Server {
                     break;
                 case CREATE_ACCOUNT:
                     CreateAccountMessage createAccountMessage = (CreateAccountMessage) message;
-                    System.out.println(" createAccountMessage RECIEVED");
+                    storeImageAndSetMetaData(createAccountMessage.user);
                     result = dbconn.createAccount(createAccountMessage.user);
                     send(new DatabaseResponseMessage(null, result));
                     break;
                 case ACCOUNT_EXISTS:
                     AccountExistsMessage accountExistsMessage = (AccountExistsMessage) message;
-                    System.out.println("accountExistsMessage RECIEVED");
                     result = dbconn.accountExists(accountExistsMessage.email);
                     System.out.println(result);
                     send(new DatabaseResponseMessage(null, result));
@@ -172,13 +173,70 @@ public class Server {
                 case GET_ACCOUNT:
                     GetAccountMessage getAccountMessage = (GetAccountMessage) message;
                     User user = dbconn.getAccount(getAccountMessage.email);
-                    send(new GetAccountResponseMessage(null, (user != null), user));
+                    if(user !=  null) {
+                        user.setProfileImage(getProfileImage(user.getProfileImageMetaData()));
+                        send(new GetAccountResponseMessage(null, true, user));
+                    } else { send(new GetAccountResponseMessage(null, false, null)); }
                     break;
                 case GET_FRIENDS:
                     GetFriendsMessage getFriendsMessage = (GetFriendsMessage) message;
                     List<User> friends = dbconn.getFriends(getFriendsMessage.email);
-                    send(new GetFriendsResponseMessage(null, (friends != null), friends));
+                    if(friends !=  null) {
+                        friends.forEach(friend -> friend.setProfileImage(getProfileImage(friend.getProfileImageMetaData())));
+                        send(new GetFriendsResponseMessage(null, true, friends));
+                    } else { send(new GetFriendsResponseMessage(null, false, null));}
                     break;
+                case GET_POSSIBLE_USERS:
+                    GetPossibleUsersMessage getPossibleUsersMessage = (GetPossibleUsersMessage) message;
+                    List<User> possibleUsers = dbconn.getPossibleUsers(getPossibleUsersMessage.displayName);
+                    if(possibleUsers != null) {
+                        possibleUsers.forEach(possibleUser -> possibleUser.setProfileImage(getProfileImage(possibleUser.getProfileImageMetaData())));
+                        send(new GetPossibleUsersResponseMessage(null, true, possibleUsers));
+                    } else { send(new GetPossibleUsersResponseMessage(null, false, null)); }
+                    break;
+                case GET_ADD_FRIEND_NOTIFICATIONS:
+                    GetAddFriendNotificationsMessage getAddFriendNotificationsMessage = (GetAddFriendNotificationsMessage) message;
+                    HashMap<AddFriendNotification, User> addFriendNotificationUserHashMap = dbconn.getAddFriendNotifications(getAddFriendNotificationsMessage.email);
+                    if(addFriendNotificationUserHashMap != null) {
+                        addFriendNotificationUserHashMap.forEach(((addFriendNotification, sourceUser) -> {
+                            addFriendNotification.setDisplayName(sourceUser.getDisplayName());
+                            addFriendNotification.setProfileImage(getProfileImage(sourceUser.getProfileImageMetaData()));
+                        }));
+                        List<AddFriendNotification> addFriendNotifications = Arrays.asList(addFriendNotificationUserHashMap.keySet().toArray(new AddFriendNotification[] {}));
+                        send(new GetAddFriendNotificationsResponseMessage(null, true, addFriendNotifications));
+                    } else { send(new GetAddFriendNotificationsResponseMessage(null, false, null)); }
+                    break;
+            }
+        }
+
+        private ProfileImage getProfileImage(String profileImageMetaData){
+            try {
+                FileInputStream fileInputStream = new FileInputStream(new File(profileImageMetaData));
+                byte[] profileImage = IOUtils.toByteArray(fileInputStream);
+                String format = FilenameUtils.getExtension(profileImageMetaData);
+                return new ProfileImage(profileImage, format);
+            }
+            catch (IOException e){
+                logger.error("Could not get profileImage (returning empty byte[])", e);
+                return new ProfileImage(new byte[]{}, null);
+            }
+        }
+
+        private void storeImageAndSetMetaData(User user){
+            String username = user.getEmail().split("@")[0];
+            String outputPath = storagePath + username + "." + user.getProfileImage().format;
+            //Set MetaData
+            user.setProfileImageMetaData(outputPath);
+
+            //Store Image
+            File outputFile = new File(outputPath);
+            new ByteArrayInputStream(user.getProfileImage().image);
+            try {
+                FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+                fileOutputStream.write(user.getProfileImage().image);
+            }
+            catch (IOException e){
+                logger.error("User '{}' profile image could not be saved", user.getEmail(), e);
             }
         }
 
@@ -206,7 +264,7 @@ public class Server {
                 }
             }
             catch (IOException e) { //If message would not to transferred to managed client, Log ERROR of the lost message
-                logger.error("Message {} could not be sent to client {} (socket closed)", new GsonBuilder().create().toJson(message), thisClient.name, e);
+                logger.error("Message {} could not be sent to client {} (socket closed)", message.type, thisClient.name, e);
             }
         }
 
