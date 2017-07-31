@@ -24,8 +24,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class ServerConnector {
-//    private final InetAddress serverIP;
-//    private final int serverPort;
+
     private static final Logger logger = LoggerFactory.getLogger(ServerConnector.class);
     private ObjectOutputStream out;
     private ObjectInputStream in;
