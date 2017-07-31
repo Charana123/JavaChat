@@ -7,7 +7,7 @@ import com.charana.chat_window.ui.notification_tab.NoNewNotificationsGraphic;
 import com.charana.chat_window.ui.notification_tab.NotificationPopoverControl;
 import com.charana.chat_window.ui.sidebar.UserSidebarButtonControl;
 import com.charana.chat_window.ui.contacts.ContactsMainController;
-import com.charana.database_server.user.AddFriendNotificationDB;
+import com.charana.database_server.user.AddFriendNotification;
 import com.charana.database_server.user.User;
 import com.charana.login_window.BaseWindowController;
 import com.charana.login_window.utilities.database.ServerAPI;
@@ -88,9 +88,9 @@ public class ChatController extends BaseWindowController implements Initializabl
 
     @FXML
     void viewFriendNotifications(){
-        serverAPI.getAddFriendNotifications(user.getEmail(), (Boolean success, List<AddFriendNotificationDB> addFriendNotificationDB) -> {
+        serverAPI.getAddFriendNotifications(user.getEmail(), (Boolean success, List<AddFriendNotification> addFriendNotification) -> {
             if(success){
-                List<FriendNotificationControl> friendNotificationControls = addFriendNotificationDB.stream().map(addFriendNotification -> {
+                List<FriendNotificationControl> friendNotificationControls = addFriendNotification.stream().map(addFriendNotification -> {
                     //TODO:: Get the user object (because you need the email of the user as well to send a response)
                     return new FriendNotificationControl(addFriendNotification.getDisplayName(), addFriendNotification.getProfileImage(), null, null);
                 }).collect(Collectors.toList());

@@ -1,6 +1,6 @@
 package com.charana.login_window.utilities.database;
 
-import com.charana.database_server.user.AddFriendNotificationDB;
+import com.charana.database_server.user.AddFriendNotification;
 import com.charana.database_server.user.DisplayName;
 import com.charana.database_server.user.User;
 import com.charana.server.message.Message;
@@ -76,10 +76,10 @@ public class ServerAPI {
         }).start();
     }
 
-    public void getAddFriendNotifications(String email, BiConsumer<Boolean, List<AddFriendNotificationDB>> completionHandler){
+    public void getAddFriendNotifications(String email, BiConsumer<Boolean, List<AddFriendNotification>> completionHandler){
         new Thread(() -> {
             GetAddFriendNotificationsResponseMessage response = (GetAddFriendNotificationsResponseMessage) sendAndRecieve(new GetAddFriendNotificationsMessage(null , email));
-            Platform.runLater(() -> completionHandler.accept(response.success, response.addFriendNotificationDB));
+            Platform.runLater(() -> completionHandler.accept(response.success, response.addFriendNotification));
         }).start();
     }
 

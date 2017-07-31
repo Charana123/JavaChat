@@ -1,10 +1,7 @@
 package com.charana.server;
 
 
-import com.charana.database_server.user.AddFriendNotificationDB;
-import com.charana.database_server.user.DisplayName;
-import com.charana.database_server.user.Friend;
-import com.charana.database_server.user.User;
+import com.charana.database_server.user.*;
 import com.j256.ormlite.dao.*;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.stmt.Where;
@@ -21,14 +18,14 @@ public class DatabaseConnectorORM {
     public ConnectionSource conn;
     private Dao<User, String> userDAO;
     private Dao<Friend, Integer> friendDAO;
-    private Dao<AddFriendNotificationDB, Integer> addFriendNotificationsDAO;
+    private Dao<AddFriendNotification, Integer> addFriendNotificationsDAO;
 
     DatabaseConnectorORM(ConnectionSource connection){ //TODO:: Throw error and log could not connect to database error from server
         try{
             this.conn = connection;
             userDAO = DaoManager.createDao(conn, User.class);
             friendDAO = DaoManager.createDao(conn, Friend.class);
-            addFriendNotificationsDAO = DaoManager.createDao(conn, AddFriendNotificationDB.class);
+            addFriendNotificationsDAO = DaoManager.createDao(conn, AddFriendNotification.class);
         }
         catch (SQLException e){ e.printStackTrace(); }
     }
@@ -91,8 +88,8 @@ public class DatabaseConnectorORM {
         try {
             friendDAO.create(new Friend("albie@gmail.com", user));
             friendDAO.create(new Friend("rajat@gmail.com", user));
-            addFriendNotificationsDAO.create(new AddFriendNotificationDB("albie@gmail.com", user));
-            addFriendNotificationsDAO.create(new AddFriendNotificationDB("rajat@gmail.com", user));
+            addFriendNotificationsDAO.create(new AddFriendNotification("albie@gmail.com", user));
+            addFriendNotificationsDAO.create(new AddFriendNotification("rajat@gmail.com", user));
 
             int creates = userDAO.create(user);
             if(creates == 1){
@@ -183,22 +180,24 @@ public class DatabaseConnectorORM {
         }
     }
 
-    public HashMap<AddFriendNotificationDB, User> getAddFriendNotifications(String email){
+    public List<User> getAddFriendNotifications(String email){
         try{
             User user = userDAO.queryForId(email);
-            CloseableIterator<AddFriendNotificationDB> notifications = user.getAddFriendNotificationDB().closeableIterator();
-            HashMap<AddFriendNotificationDB, User> notificationUserHashMap = new HashMap<>();
+            CloseableWrappedIterable<AddFriendNotification> notifications = user.getAddFriendNotification().getWrappedIterable();
+            for(AddFriendNotification addFriendNotification : notifications){
+                User sourceUser = userDAO.queryForId(addFriendNotification.getSourceEmail());
+            }
             notifications.forEachRemaining(addFriendNotification -> {
                 try {
                     User sourceUser = userDAO.queryForId(addFriendNotification.getSourceEmail());
                     notificationUserHashMap.put(addFriendNotification, sourceUser);
                 } catch (SQLException e){
-                    logger.error("getAddFriendNotificationDB Error, Query for user by id {} failed", addFriendNotification.getSourceEmail(), e);
+                    logger.error("getAddFriendNotification Error, Query for user by id {} failed", addFriendNotification.getSourceEmail(), e);
                 }
             });
             return notificationUserHashMap;
         } catch (SQLException e){
-            logger.error("getAddFriendNotificationDB Error, Query for user by id {} failed", email, e);
+            logger.error("getAddFriendNotification Error, Query for user by id {} failed", email, e);
             return null;
         }
     }
@@ -206,8 +205,8 @@ public class DatabaseConnectorORM {
     public boolean addFriendNotification(String sourceUserEmail, String targetUserEmail){
         try{
             User targetUser = userDAO.queryForId(targetUserEmail);
-            ForeignCollection<AddFriendNotificationDB> addFriendNotificationDB = targetUser.getAddFriendNotificationDB();
-            addFriendNotificationDB.add(new AddFriendNotificationDB(sourceUserEmail , targetUser));
+            ForeignCollection<AddFriendNotification> addFriendNotification = targetUser.getAddFriendNotification();
+            addFriendNotification.add(new AddFriendNotification(sourceUserEmail , targetUser));
             logger.info("Successfully added friend notification to targetUser {} from sourceUser {}", sourceUserEmail, targetUserEmail);
             return true;
         }

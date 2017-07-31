@@ -1,6 +1,6 @@
 package com.charana.server;
 
-import com.charana.database_server.user.AddFriendNotificationDB;
+import com.charana.database_server.user.AddFriendNotification;
 import com.charana.database_server.user.ProfileImage;
 import com.charana.database_server.user.User;
 import com.charana.server.message.*;
@@ -206,14 +206,14 @@ public class Server {
                     break;
                 case GET_ADD_FRIEND_NOTIFICATIONS:
                     GetAddFriendNotificationsMessage getAddFriendNotificationsMessage = (GetAddFriendNotificationsMessage) message;
-                    HashMap<AddFriendNotificationDB, User> addFriendNotificationUserHashMap = dbconn.getAddFriendNotifications(getAddFriendNotificationsMessage.email);
+                    HashMap<AddFriendNotification, User> addFriendNotificationUserHashMap = dbconn.getAddFriendNotifications(getAddFriendNotificationsMessage.email);
                     if(addFriendNotificationUserHashMap != null) {
                         addFriendNotificationUserHashMap.forEach(((addFriendNotification, sourceUser) -> {
                             addFriendNotification.setDisplayName(sourceUser.getDisplayName());
                             addFriendNotification.setProfileImage(getProfileImage(sourceUser.getProfileImageMetaData()));
                         }));
-                        List<AddFriendNotificationDB> addFriendNotificationDB = Arrays.asList(addFriendNotificationUserHashMap.keySet().toArray(new AddFriendNotificationDB[] {}));
-                        send(new GetAddFriendNotificationsResponseMessage(null, true, addFriendNotificationDB));
+                        List<AddFriendNotification> addFriendNotification = Arrays.asList(addFriendNotificationUserHashMap.keySet().toArray(new AddFriendNotification[] {}));
+                        send(new GetAddFriendNotificationsResponseMessage(null, true, addFriendNotification));
                     } else { send(new GetAddFriendNotificationsResponseMessage(null, false, null)); }
                     break;
             }

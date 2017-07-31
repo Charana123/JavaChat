@@ -1,9 +1,29 @@
 package com.charana.database_server.user;
 
-/**
- * Created by Charana on 7/31/17.
- */
-public class AddFriendNotification {
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
 
-    
+import java.io.Serializable;
+
+@DatabaseTable (tableName = "Notifications")
+public class AddFriendNotification implements Serializable{
+
+    @DatabaseField (generatedId = true, columnName = "ID")
+    Integer id;
+    @DatabaseField (columnName = "SourceEmail")
+    String sourceEmail;
+    @DatabaseField (foreign = true, foreignAutoRefresh = true, columnName = "targetUser_ID")
+    User targetUser;
+
+    public AddFriendNotification() {}
+
+    public AddFriendNotification(String sourceEmail, User targetUser){
+        this.sourceEmail = sourceEmail;
+        this.targetUser = targetUser;
+    }
+
+    //GETTERS
+    public String getSourceEmail() { return sourceEmail; }
+    public User getTargetUser() { return targetUser; }
+
 }

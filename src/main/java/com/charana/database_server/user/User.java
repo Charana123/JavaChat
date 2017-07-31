@@ -29,7 +29,7 @@ public class User implements Serializable {
     @ForeignCollectionField (eager = false)
     ForeignCollection<Friend> friends;
     @ForeignCollectionField (eager = false)
-    ForeignCollection<AddFriendNotificationDB> addFriendNotificationDB;
+    ForeignCollection<AddFriendNotification> addFriendNotification;
 
     private ProfileImage profileImage;
 
@@ -78,7 +78,7 @@ public class User implements Serializable {
 
     public String getProfileImageMetaData() { return profileImageMetaData; }
 
-    public ForeignCollection<AddFriendNotificationDB> getAddFriendNotificationDB() { return addFriendNotificationDB; }
+    public ForeignCollection<AddFriendNotification> getAddFriendNotification() { return addFriendNotification; }
 
     //SETTERS
     public void setProfileImageMetaData(String profileImageMetaData) { this.profileImageMetaData = profileImageMetaData; }
