@@ -2,7 +2,7 @@ package com.charana.chat_window;
 
 import com.charana.chat_window.ui.main_view.ChatController;
 import com.charana.database_server.user.User;
-import com.charana.login_window.utilities.database.DatabaseConnector;
+import com.charana.login_window.utilities.database.ServerAPI;
 import com.charana.login_window.utilities.database.ServerConnector;
 import javafx.application.Application;
 import javafx.stage.Stage;
@@ -20,10 +20,11 @@ public class MainChatLauncher extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        ServerConnector serverConnector = new ServerConnector(serverIP, serverPort);
-        DatabaseConnector dbConnector = new DatabaseConnector(serverConnector);
-        dbConnector.getAccount("charananandasena@yahoo.com", (Boolean success, User user) -> {
-            ChatController.chatWindow(user, serverConnector).show();
+        ServerConnector serverConnector = new ServerConnector(serverIP, serverPort, null, null);
+        ServerAPI serverAPI = new ServerAPI(serverConnector);
+        serverAPI.getAccount("albie@gmail.com", (Boolean success, User user) -> {
+            serverConnector.disconnect();
+            ChatController.chatWindow(user, serverIP, serverPort).show();
         });
     }
 
