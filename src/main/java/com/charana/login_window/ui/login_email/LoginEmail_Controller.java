@@ -43,7 +43,7 @@ public class LoginEmail_Controller extends BaseController implements Initializab
     @FXML
     void login(){
         String email = emailField.getText();
-        startUp_controller.databaseConnector.accountExists(email, (Boolean success) -> {
+        startUp_controller.serverAPI.accountExists(email, (Boolean success) -> {
             if(success) {
                 if(popOver.isShowing()) popOver.hide();
                 logger.debug("Account Exists");

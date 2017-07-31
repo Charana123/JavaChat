@@ -9,7 +9,7 @@ import com.charana.login_window.ui.forgot_password.ForgotPassword_Controller;
 import com.charana.login_window.ui.login_email.LoginEmail_Controller;
 import com.charana.login_window.ui.login_password.LoginPassword_Controller;
 import com.charana.login_window.ui.reenter_password.ReenterPassword_Controller;
-import com.charana.login_window.utilities.database.DatabaseConnector;
+import com.charana.login_window.utilities.database.ServerAPI;
 import com.charana.login_window.utilities.database.ServerConnector;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -32,7 +32,7 @@ public class StartUp_Controller extends BaseWindowController implements Initiali
     private InetAddress serverIP;
     private int serverPort;
     public final ServerConnector serverConnector;
-    public final DatabaseConnector databaseConnector;
+    public final ServerAPI serverAPI;
 
 
     public StartUp_Controller(Stage loginStage, InetAddress serverIP, int serverPort){
@@ -40,12 +40,13 @@ public class StartUp_Controller extends BaseWindowController implements Initiali
         this.serverIP = serverIP;
         this.serverPort = serverPort;
         this.loginStage = loginStage;
-        this.serverConnector = new ServerConnector(serverIP, serverPort);
-        serverConnector.setWarningDialogCallbacks(
+        this.serverConnector = new ServerConnector(
+                serverIP,
+                serverPort,
                 (Void voidz) -> hideWarningDialog(),
                 (String warningHeader, String warningContent) -> showWarningDialog(warningHeader, warningContent));
         loginStage.setOnCloseRequest(event -> serverConnector.disconnect() );
-        this.databaseConnector = new DatabaseConnector(serverConnector);
+        this.serverAPI = new ServerAPI(serverConnector);
     }
 
     @Override
@@ -88,8 +89,9 @@ public class StartUp_Controller extends BaseWindowController implements Initiali
         new Thread(() -> {
             try { Thread.sleep(2000); }
             catch (InterruptedException e) { logger.error("JavaFX Application thread interrupted", e); return; }
-            databaseConnector.getAccount(email, (Boolean success, User user) -> {
-                Stage chatWindow = ChatController.chatWindow(user, serverConnector);
+            serverAPI.getAccount(email, (Boolean success, User user) -> {
+                serverConnector.disconnect();
+                Stage chatWindow = ChatController.chatWindow(user, serverIP, serverPort);
                 loginStage.hide();
                 chatWindow.show();
             });

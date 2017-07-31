@@ -7,7 +7,7 @@
 <fx:root maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="50.0" prefWidth="870.0" type="HBox" xmlns="http://javafx.com/javafx/8.0.65" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Button fx:id="contactInformationButton" alignment="TOP_LEFT" mnemonicParsing="false" prefHeight="50.0" prefWidth="825.0" style="-fx-alignment: center-left;" />
-      <Button fx:id="addContactButton" mnemonicParsing="false" prefHeight="50.0" prefWidth="50.0">
+      <Button fx:id="addContactButton" mnemonicParsing="false" onAction="#addContact" prefHeight="50.0" prefWidth="50.0">
          <graphic>
             <FontAwesomeIconView glyphName="USER_PLUS" size="18.0" />
          </graphic>

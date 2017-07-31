@@ -16,18 +16,23 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.function.Consumer;
 
 
 public class FriendNotificationControl extends NotificationControl implements Initializable{
     private DisplayName sourceDisplayName;
     private ProfileImage sourceProfileImage;
     @FXML Button acceptButton;
+    Consumer<String> onAcceptFriendRequestHandler;
+    Consumer<String> onRejectFriendRequestHandler;
     @FXML Button rejectButton;
     @FXML Button contentButton;
 
-    public FriendNotificationControl(DisplayName sourceDisplayName, ProfileImage sourceProfileImage){
+    public FriendNotificationControl(DisplayName sourceDisplayName, ProfileImage sourceProfileImage, Consumer<String> onAcceptFriendRequestHandler, Consumer<String> onRejectFriendRequestHandler){
         this.sourceDisplayName = sourceDisplayName;
         this.sourceProfileImage = sourceProfileImage;
+        this.onAcceptFriendRequestHandler = onAcceptFriendRequestHandler;
+        this.onRejectFriendRequestHandler = onRejectFriendRequestHandler;
 
         FXMLLoader fxmlLoader = new FXMLLoader(FriendNotificationControl.class.getResource("/views/chat_window/notifications/FriendNotification.fxml"));
         fxmlLoader.setController(this);
@@ -47,5 +52,15 @@ public class FriendNotificationControl extends NotificationControl implements In
         profileImage.setFitHeight(imageDimension);
         profileImage.setClip(new Rectangle(0, 0, imageDimension, imageDimension));
         contentButton.setGraphic(profileImage);
+    }
+
+    @FXML
+    void acceptFriendRequest(){
+        //onAcceptFriendRequestHandler.accept();
+    }
+
+    @FXML
+    void rejectFriendRequest(){
+
     }
 }

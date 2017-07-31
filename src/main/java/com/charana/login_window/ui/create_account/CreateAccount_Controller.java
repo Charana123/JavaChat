@@ -77,9 +77,9 @@ public class CreateAccount_Controller extends BaseController implements Initiali
                         Gender.valueOf(genderChooser.getValue()),
                         new Birthday(Integer.parseInt(birthDay.getText()), Month.valueOf(birthMonthChooser.getValue()), Integer.parseInt(birthYear.getText())));
 
-                startUp_controller.databaseConnector.accountExists(emailAddressField.getText(), (Boolean exists) -> {
+                startUp_controller.serverAPI.accountExists(emailAddressField.getText(), (Boolean exists) -> {
                     if(!exists){
-                        startUp_controller.databaseConnector.createAccount(user);
+                        startUp_controller.serverAPI.createAccount(user);
                         logger.info("Account Created");
                         this.startUp_controller.loadLoginEmailView();
                     }

@@ -1,6 +1,6 @@
 package com.charana.login_window.utilities.database;
 
-import com.charana.database_server.user.AddFriendNotification;
+import com.charana.database_server.user.AddFriendNotificationDB;
 import com.charana.database_server.user.DisplayName;
 import com.charana.database_server.user.User;
 import com.charana.server.message.Message;
@@ -10,21 +10,22 @@ import com.charana.server.message.database_message.database_response_messages.co
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetAddFriendNotificationsResponseMessage;
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetFriendsResponseMessage;
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetPossibleUsersResponseMessage;
+import com.charana.server.message.friend_requests.FriendRequestMessage;
 import javafx.application.Platform;
 
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 
-public class DatabaseConnector {
+public class ServerAPI {
     ServerConnector serverConnector;
 
-    public DatabaseConnector(ServerConnector serverConnector) {
+    public ServerAPI(ServerConnector serverConnector) {
         this.serverConnector = serverConnector;
     }
 
+    //DATABASE MESSAGES
     public void login(String email, String password, Consumer<Boolean> completionHandler) {
         new Thread(() -> {
             DatabaseResponseMessage response = sendAndRecieve(new LoginMessage(null, email, password));
@@ -75,10 +76,10 @@ public class DatabaseConnector {
         }).start();
     }
 
-    public void getAddFriendNotifications(String email, BiConsumer<Boolean, List<AddFriendNotification>> completionHandler){
+    public void getAddFriendNotifications(String email, BiConsumer<Boolean, List<AddFriendNotificationDB>> completionHandler){
         new Thread(() -> {
             GetAddFriendNotificationsResponseMessage response = (GetAddFriendNotificationsResponseMessage) sendAndRecieve(new GetAddFriendNotificationsMessage(null , email));
-            Platform.runLater(() -> completionHandler.accept(response.success, response.addFriendNotifications));
+            Platform.runLater(() -> completionHandler.accept(response.success, response.addFriendNotificationDB));
         }).start();
     }
 
@@ -91,10 +92,26 @@ public class DatabaseConnector {
         //response message will be initialized with a non-null message if it exits the loop.
         while(!serverConnector.send(message) || (responseMessage = serverConnector.DequeueResponse()) == null){
             try { Thread.sleep(1000); }
-            catch (InterruptedException e) { } //TODO:: Log error and avoid callback
+            catch (InterruptedException e) { }
         }
         return responseMessage;
     }
+
+
+    //OTHER SERVER MESSAGES
+    public void sendFriendRequestMessage(String sourceUserEmail, String targetUserEmail){
+        sendUntilRecieved(new FriendRequestMessage(null, sourceUserEmail, targetUserEmail));
+    }
+
+    private void sendUntilRecieved(Message message){
+        new Thread(() -> {
+            while(!serverConnector.send(message)) {
+                try { Thread.sleep(1000); }
+                catch (InterruptedException e){ }
+            }
+        }).start();
+    }
+
 
 }
 

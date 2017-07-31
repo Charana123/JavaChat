@@ -3,7 +3,7 @@ package com.charana.chat_window;
 import com.charana.chat_window.ui.notification_tab.FriendNotificationControl;
 import com.charana.chat_window.ui.notification_tab.NotificationPopoverControl;
 import com.charana.database_server.user.User;
-import com.charana.login_window.utilities.database.DatabaseConnector;
+import com.charana.login_window.utilities.database.ServerAPI;
 import com.charana.login_window.utilities.database.ServerConnector;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
@@ -25,7 +25,7 @@ public class NotificationPopover_TEST extends Application {
         VBox root = new VBox();
         Button button = new Button("Click");
         button.setOnMouseClicked(event -> {
-            PopOver popOver = new NotificationPopoverControl(Arrays.asList(new FriendNotificationControl(user.getDisplayName(), user.getProfileImage())));
+            PopOver popOver = new NotificationPopoverControl(Arrays.asList(new FriendNotificationControl(user.getDisplayName(), user.getProfileImage(), null, null)));
             popOver.show(button);
         });
         root.getChildren().addAll(button);
@@ -37,8 +37,8 @@ public class NotificationPopover_TEST extends Application {
 
         ConnectionSource connectionSource = new JdbcConnectionSource("jdbc:h2:tcp://localhost:9081/~/Desktop/Application/database");
         InetAddress localhost = InetAddress.getByName("localhost");
-        DatabaseConnector dbConnector = new DatabaseConnector(new ServerConnector(localhost, 8192));
-        dbConnector.getAccount("charananandasena@yahoo.com", (Boolean success, User user) -> {
+        ServerAPI serverAPI = new ServerAPI(new ServerConnector(localhost, 8192, null, null));
+        serverAPI.getAccount("charananandasena@yahoo.com", (Boolean success, User user) -> {
             Scene scene = new Scene(createContent(user));
             primaryStage.setScene(scene);
             primaryStage.show();

@@ -1,6 +1,6 @@
 package com.charana.server;
 
-import com.charana.database_server.user.AddFriendNotification;
+import com.charana.database_server.user.AddFriendNotificationDB;
 import com.charana.database_server.user.ProfileImage;
 import com.charana.database_server.user.User;
 import com.charana.server.message.*;
@@ -8,17 +8,15 @@ import com.charana.server.message.database_message.database_command_messages.*;
 import com.charana.server.message.database_message.database_command_messages.concrete_database_command_messages.*;
 import com.charana.server.message.database_message.database_response_messages.*;
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.*;
-import com.google.gson.GsonBuilder;
+import com.charana.server.message.friend_requests.FriendRequestMessage;
 import com.j256.ormlite.support.ConnectionSource;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.stream.ImageInputStream;
 import java.io.*;
 import java.net.*;
-import java.sql.Connection;
 import java.util.*;
 import java.util.Collections;
 import java.util.List;
@@ -69,7 +67,6 @@ public class Server {
         private final Socket connection; //Final values can only be set during initialization and in the constructor
         private ObjectOutputStream thisClientOutStream;
         private ServerClient thisClient;
-        private boolean hasConnected = false; //Whether client has send a connection message to register with the server
         private String clientName;
         private DatabaseConnectorORM dbconn;
 
@@ -141,6 +138,19 @@ public class Server {
                     break;
                 case SERVER:
                     break;
+                case FRIEND_REQUEST:
+                    FriendRequestMessage friendRequestMessage = (FriendRequestMessage) message;
+                    boolean success = dbconn.addFriendNotification(friendRequestMessage.sourceUserEmail, friendRequestMessage.targetUserEmail);
+                    if(success){ sendToClient(friendRequestMessage.sourceUserEmail, friendRequestMessage.targetUserEmail, friendRequestMessage); }
+                    break;
+                case FRIEND_REQUEST_RESPONSE:
+                    //TODO:: Whenever the client response (via accept or reject) we get a accept/reject message
+                    //TODO:: We remove the notification from the database
+                    //TODO:: If reject we do nothing else
+                    //TODO:: If accept we add the sourceUser to our targetUsers friends list and vice versa
+                    //TODO:: Whenever the users (source or target) next look at their friends list (which refreshes the friends list via new database call)
+                    //TODO:: The will see each other
+                    break;
             }
         }
 
@@ -196,14 +206,14 @@ public class Server {
                     break;
                 case GET_ADD_FRIEND_NOTIFICATIONS:
                     GetAddFriendNotificationsMessage getAddFriendNotificationsMessage = (GetAddFriendNotificationsMessage) message;
-                    HashMap<AddFriendNotification, User> addFriendNotificationUserHashMap = dbconn.getAddFriendNotifications(getAddFriendNotificationsMessage.email);
+                    HashMap<AddFriendNotificationDB, User> addFriendNotificationUserHashMap = dbconn.getAddFriendNotifications(getAddFriendNotificationsMessage.email);
                     if(addFriendNotificationUserHashMap != null) {
                         addFriendNotificationUserHashMap.forEach(((addFriendNotification, sourceUser) -> {
                             addFriendNotification.setDisplayName(sourceUser.getDisplayName());
                             addFriendNotification.setProfileImage(getProfileImage(sourceUser.getProfileImageMetaData()));
                         }));
-                        List<AddFriendNotification> addFriendNotifications = Arrays.asList(addFriendNotificationUserHashMap.keySet().toArray(new AddFriendNotification[] {}));
-                        send(new GetAddFriendNotificationsResponseMessage(null, true, addFriendNotifications));
+                        List<AddFriendNotificationDB> addFriendNotificationDB = Arrays.asList(addFriendNotificationUserHashMap.keySet().toArray(new AddFriendNotificationDB[] {}));
+                        send(new GetAddFriendNotificationsResponseMessage(null, true, addFriendNotificationDB));
                     } else { send(new GetAddFriendNotificationsResponseMessage(null, false, null)); }
                     break;
             }
@@ -240,6 +250,20 @@ public class Server {
             }
         }
 
+        private void sendToClient(String sourceUserEmail, String targetUserEmail, Message message){
+            Optional<ServerClient> targetClientOptional = clients.stream().filter(serverClient -> serverClient.name.equals(targetUserEmail)).findFirst();
+            if(targetClientOptional.isPresent()){
+                ServerClient targetClient = targetClientOptional.get();
+                synchronized (targetClient.toClientStream){
+                    try { targetClient.toClientStream.writeObject(message); }
+                    catch (IOException e){
+                        logger.error("Message type: {} could not be sent to targetUser {} from sourceUser {} (error sending message)", message.type, targetUserEmail, sourceUserEmail, e);
+                    }
+                }
+            }
+            else { logger.info("Message type: {} could not be sent to targetUser {} from sourceUser {} (client currently offline)", message.type, targetUserEmail, sourceUserEmail); }
+        }
+
         private void sendToAll(TextMessage text_message){
             logger.info("Client: " + thisClient.name + " sending text message: " + text_message);
             //Such that no modifications occur to the client list (add or remove) during traversal/iteration in the below code
@@ -251,7 +275,7 @@ public class Server {
                         }
                     }
                     catch (IOException e) { //If message could not be transferred to client, Log ERROR of the lost message
-                        logger.error("Message {} could not be sent to client {}", new GsonBuilder().create().toJson(text_message), client.name);
+                        logger.error("Message {} from sourceClient {} could not be sent to targetClient {}", text_message.text_message, text_message.sourceUserEmail, client.name);
                     }
                 });
             }
@@ -270,11 +294,9 @@ public class Server {
 
         private void addClient(ConnectionMessage connection_message){
             logger.info("Connection made with client {} ", connection_message.clientName);
-            ServerClient client = new ServerClient(connection_message.clientName, thisClientOutStream, connection);
-            this.thisClient = client;
-            clientName = client.name;
-            hasConnected = true;
-            clients.add(client);
+            clientName = connection_message.clientName;
+            this.thisClient = new ServerClient(clientName, thisClientOutStream, connection);
+            clients.add(this.thisClient);
         }
 
         /**
@@ -284,7 +306,7 @@ public class Server {
             //Remove the client from the server, if the client has previously connected
             if(!Objects.isNull(thisClient)) { clients.remove(thisClient); }
             connectionPool.closeConnection(dbconn.conn);
-            logger.info("Closing connection with client {}:{}",  connection.getInetAddress().getHostAddress(), connection.getPort());
+            logger.info("Closing connection with client {}",  this.clientName);
             try { connection.close(); }
             catch (IOException e) { logger.error("Could not close connection/socket", e); }
         }

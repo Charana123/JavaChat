@@ -1,22 +1,12 @@
 package com.charana.database_server;
 
 import com.charana.database_server.user.*;
-import com.j256.ormlite.dao.*;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
-import com.j256.ormlite.stmt.PreparedQuery;
-import com.j256.ormlite.stmt.QueryBuilder;
-import com.j256.ormlite.stmt.SelectArg;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import org.h2.tools.Server;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.net.URLDecoder;
 import java.sql.*;
-import java.util.Arrays;
-import java.util.List;
 
 public class H2DatabaseServer {
 
@@ -43,7 +33,9 @@ public class H2DatabaseServer {
             ConnectionSource conn = new JdbcConnectionSource("jdbc:h2:tcp://localhost:9081/~/Desktop/Application/database");
             TableUtils.createTableIfNotExists(conn, User.class);
             TableUtils.createTableIfNotExists(conn, Friend.class);
-            TableUtils.createTableIfNotExists(conn, AddFriendNotification.class);
+            TableUtils.dropTable(conn, AddFriendNotificationDB.class, true);
+            TableUtils.createTableIfNotExists(conn, AddFriendNotificationDB.class);
+
 
 //            System.out.println();
 //            Dao<User, String> userDAO = DaoManager.createDao(conn, User.class);

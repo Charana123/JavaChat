@@ -59,7 +59,7 @@ public class LoginPassword_Controller extends BaseController implements Initiali
 
     @FXML
     private void login(){
-        startUp_controller.databaseConnector.login(email, passwordField.getText(), (Boolean success) -> {
+        startUp_controller.serverAPI.login(email, passwordField.getText(), (Boolean success) -> {
             if(success){
                 if(popOver.isShowing()) popOver.hide();
                 logger.debug("Successful Login");

@@ -20,7 +20,6 @@ public class UserSidebarButtonControl extends Button {
     private final String email;
     private Group statusContainer;
 
-    //TODO:: Give UserSidebarButtonControl a user object (not the individual data)
     public UserSidebarButtonControl(double prefWidth, double prefHeight, User user){
         this.email = user.getEmail();
         imageRadius = (Math.min(prefWidth, prefHeight) - 10)/2;

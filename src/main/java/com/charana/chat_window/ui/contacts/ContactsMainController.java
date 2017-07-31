@@ -1,8 +1,8 @@
 package com.charana.chat_window.ui.contacts;
 
-import com.charana.chat_window.ui.main_view.ViewSwapper;
+import com.charana.chat_window.ui.main_view.ViewSwapperInterface;
 import com.charana.database_server.user.User;
-import com.charana.login_window.utilities.database.DatabaseConnector;
+import com.charana.login_window.utilities.database.ServerAPI;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -22,12 +22,12 @@ public class ContactsMainController implements Initializable {
     @FXML Button allFavouritesButton;
     @FXML Button addContactButton;
     @FXML ListView contactsListview;
-    DatabaseConnector dbConnector;
+    ServerAPI dbConnector;
     private User user;
     private List<User> friends;
-    private ViewSwapper viewSwapper;
+    private ViewSwapperInterface viewSwapper;
 
-    private ContactsMainController(User user, List<User> friends, ViewSwapper viewSwapper){
+    private ContactsMainController(User user, List<User> friends, ViewSwapperInterface viewSwapper){
         this.user = user;
         this.friends = friends;
         this.viewSwapper = viewSwapper;
@@ -44,7 +44,7 @@ public class ContactsMainController implements Initializable {
         contactsListview.getItems().addAll(userContactButtonControls);
     }
 
-    public static Parent getInstance(User user, List<User> friends, ViewSwapper viewSwapper){
+    public static Parent getInstance(User user, List<User> friends, ViewSwapperInterface viewSwapper){
         FXMLLoader loader = new FXMLLoader(ContactsMainController.class.getResource("/views/chat_window/contacts/ContactsMainView.fxml"));
         loader.setController(new ContactsMainController(user, friends, viewSwapper));
         try { return loader.load(); }

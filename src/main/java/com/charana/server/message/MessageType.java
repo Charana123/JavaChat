@@ -10,4 +10,6 @@ public enum MessageType {
     , DATABASE_COMMAND
     , DATABASE_RESPONSE
     , PING //To implement the HeartBeat Protocol
+    , FRIEND_REQUEST
+    , FRIEND_REQUEST_RESPONSE
 }

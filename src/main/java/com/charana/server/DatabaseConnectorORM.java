@@ -1,42 +1,34 @@
 package com.charana.server;
 
 
-import com.charana.database_server.user.AddFriendNotification;
+import com.charana.database_server.user.AddFriendNotificationDB;
 import com.charana.database_server.user.DisplayName;
 import com.charana.database_server.user.Friend;
 import com.charana.database_server.user.User;
-import com.google.gson.GsonBuilder;
 import com.j256.ormlite.dao.*;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
-import com.j256.ormlite.stmt.PreparedQuery;
 import com.j256.ormlite.stmt.Where;
 import com.j256.ormlite.support.ConnectionSource;
-import com.sun.org.apache.bcel.internal.generic.DALOAD;
-import org.apache.commons.dbutils.QueryRunner;
-import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 import java.util.*;
-import java.util.function.BinaryOperator;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 
 public class DatabaseConnectorORM {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseConnectorORM.class);
     public ConnectionSource conn;
-    Dao<User, String> userDAO;
-    Dao<Friend, Integer> friendDAO;
-    Dao<AddFriendNotification, Integer> addFriendNotificationsDAO;
+    private Dao<User, String> userDAO;
+    private Dao<Friend, Integer> friendDAO;
+    private Dao<AddFriendNotificationDB, Integer> addFriendNotificationsDAO;
 
-    DatabaseConnectorORM(ConnectionSource connection){
+    DatabaseConnectorORM(ConnectionSource connection){ //TODO:: Throw error and log could not connect to database error from server
         try{
             this.conn = connection;
             userDAO = DaoManager.createDao(conn, User.class);
             friendDAO = DaoManager.createDao(conn, Friend.class);
-            addFriendNotificationsDAO = DaoManager.createDao(conn, AddFriendNotification.class);
+            addFriendNotificationsDAO = DaoManager.createDao(conn, AddFriendNotificationDB.class);
         }
         catch (SQLException e){ e.printStackTrace(); }
     }
@@ -99,8 +91,8 @@ public class DatabaseConnectorORM {
         try {
             friendDAO.create(new Friend("albie@gmail.com", user));
             friendDAO.create(new Friend("rajat@gmail.com", user));
-            addFriendNotificationsDAO.create(new AddFriendNotification("albie@gmail.com", user));
-            addFriendNotificationsDAO.create(new AddFriendNotification("rajat@gmail.com", user));
+            addFriendNotificationsDAO.create(new AddFriendNotificationDB("albie@gmail.com", user));
+            addFriendNotificationsDAO.create(new AddFriendNotificationDB("rajat@gmail.com", user));
 
             int creates = userDAO.create(user);
             if(creates == 1){
@@ -116,7 +108,7 @@ public class DatabaseConnectorORM {
     }
 
 //    public boolean getAccount(String email){
-//        //TODO:: Query & Convert ResultSet into User Object to return
+//
 //        try{
 //            String query = "SELECT Users.* FROM Accounts INNER JOIN FriendshipAssociations ON Users.Email = FriendshipAssociations.FriendeeEmail WHERE FriendshipAssociations.FrienderEmail = ?";
 //            List<User> users = userDAO.queryRaw(query, userDAO.getRawRowMapper(), email).getResults();
@@ -191,23 +183,37 @@ public class DatabaseConnectorORM {
         }
     }
 
-    public HashMap<AddFriendNotification, User> getAddFriendNotifications(String email){
+    public HashMap<AddFriendNotificationDB, User> getAddFriendNotifications(String email){
         try{
             User user = userDAO.queryForId(email);
-            CloseableIterator<AddFriendNotification> notifications = user.getAddFriendNotifications().closeableIterator();
-            HashMap<AddFriendNotification, User> notificationUserHashMap = new HashMap<>();
+            CloseableIterator<AddFriendNotificationDB> notifications = user.getAddFriendNotificationDB().closeableIterator();
+            HashMap<AddFriendNotificationDB, User> notificationUserHashMap = new HashMap<>();
             notifications.forEachRemaining(addFriendNotification -> {
                 try {
                     User sourceUser = userDAO.queryForId(addFriendNotification.getSourceEmail());
                     notificationUserHashMap.put(addFriendNotification, sourceUser);
                 } catch (SQLException e){
-                    logger.error("getAddFriendNotifications Error, Query for user by id {} failed", addFriendNotification.getSourceEmail(), e);
+                    logger.error("getAddFriendNotificationDB Error, Query for user by id {} failed", addFriendNotification.getSourceEmail(), e);
                 }
             });
             return notificationUserHashMap;
         } catch (SQLException e){
-            logger.error("getAddFriendNotifications Error, Query for user by id {} failed", email, e);
+            logger.error("getAddFriendNotificationDB Error, Query for user by id {} failed", email, e);
             return null;
+        }
+    }
+
+    public boolean addFriendNotification(String sourceUserEmail, String targetUserEmail){
+        try{
+            User targetUser = userDAO.queryForId(targetUserEmail);
+            ForeignCollection<AddFriendNotificationDB> addFriendNotificationDB = targetUser.getAddFriendNotificationDB();
+            addFriendNotificationDB.add(new AddFriendNotificationDB(sourceUserEmail , targetUser));
+            logger.info("Successfully added friend notification to targetUser {} from sourceUser {}", sourceUserEmail, targetUserEmail);
+            return true;
+        }
+        catch (SQLException e){
+            logger.error("Could add friend notification to targetUser {} from sourceUser {}", targetUserEmail, sourceUserEmail, e);
+            return false;
         }
     }
 

@@ -24,11 +24,11 @@ import java.util.function.Consumer;
 public class AddUserContactButtonControl extends HBox implements Initializable {
     @FXML Button contactInformationButton;
     @FXML Button addContactButton;
-    private final Consumer<MouseEvent> onAddHandler;
-    private final User user;
+    private final Consumer<String> onAddHandler;
+    private final User possibleUser;
 
-    public AddUserContactButtonControl(@NotNull User user, @NotNull Consumer<MouseEvent> onAddHandler){
-        this.user = user;
+    public AddUserContactButtonControl(@NotNull User possibleUser, @NotNull Consumer<String> onAddHandler){
+        this.possibleUser = possibleUser;
         this.onAddHandler = onAddHandler;
 
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/chat_window/contacts/add_contact/AddUserContactControl.fxml"));
@@ -45,18 +45,20 @@ public class AddUserContactButtonControl extends HBox implements Initializable {
         double addContactButtonRadius = addContactButton.getPrefHeight()/2;
         addContactButton.setClip(new Circle(addContactButtonRadius, addContactButtonRadius, addContactButtonRadius - padding));
         addContactButton.setStyle("-fx-background-color: lightgreen");
-        addContactButton.setOnMouseClicked(mouseEvent -> onAddHandler.accept(mouseEvent));
 
         double contactInformationButtonRadius = contactInformationButton.getPrefHeight()/2 - padding;
-        ImageView profileImage = new ImageView(new Image(new ByteArrayInputStream(user.getProfileImage().image)));
+        ImageView profileImage = new ImageView(new Image(new ByteArrayInputStream(possibleUser.getProfileImage().image)));
         profileImage.setFitHeight(contactInformationButtonRadius*2); profileImage.setFitWidth(contactInformationButtonRadius*2);
         profileImage.setClip(new Circle(contactInformationButtonRadius, contactInformationButtonRadius, contactInformationButtonRadius));
         contactInformationButton.setGraphic(profileImage);
-        contactInformationButton.setText(user.getDisplayName().toString());
+        contactInformationButton.setText(possibleUser.getDisplayName().toString());
         contactInformationButton.setStyle("-fx-background-color: transparent");
     }
 
-
-
+    @FXML
+    void addContact(){
+        String targetEmail = possibleUser.getEmail();
+        onAddHandler.accept(targetEmail);
+    }
 
 }
