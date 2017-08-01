@@ -10,10 +10,10 @@ import javafx.scene.layout.StackPane;
 
 
 public class NewNotificationsGraphic extends StackPane{
-    private Integer newNotificationsNum;
+    private Long newNotificationsNum;
     private Button newNotificationsNumButton;
 
-    public NewNotificationsGraphic(double prefWidth, double prefHeight, int newNotificationNum){
+    public NewNotificationsGraphic(double prefWidth, double prefHeight, long newNotificationNum){
         this.newNotificationsNum = newNotificationNum;
         if (!(prefWidth >= prefHeight)) throw new IllegalArgumentException("prefWidth must be equal or larger than prefHeight");
         setPrefSize(prefWidth, prefWidth);

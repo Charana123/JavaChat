@@ -3,6 +3,9 @@ package com.charana.login_window.ui.create_account;
 import com.charana.login_window.ui.BaseController;
 import com.charana.login_window.ui.startup.StartUp_Controller;
 import com.charana.database_server.user.*;
+import com.charana.server.message.database_message.Account;
+import com.charana.server.message.database_message.DisplayName;
+import com.charana.server.message.database_message.ProfileImage;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -68,18 +71,17 @@ public class CreateAccount_Controller extends BaseController implements Initiali
             ProfileImage profileImage = new ProfileImage(skypeDefaultImage, format);
 
             if (fieldsValid()) {
-                User user = new User(
+                Account account = new Account(
                         emailAddressField.getText(),
                         passwordField.getPassword(),
                         profileImage,
-                        new DisplayName(firstNameField.getText(), lastNameField.getText()),
                         Status.ONLINE,
+                        new DisplayName(firstNameField.getText(), lastNameField.getText()),
                         Gender.valueOf(genderChooser.getValue()),
                         new Birthday(Integer.parseInt(birthDay.getText()), Month.valueOf(birthMonthChooser.getValue()), Integer.parseInt(birthYear.getText())));
-
                 startUp_controller.serverAPI.accountExists(emailAddressField.getText(), (Boolean exists) -> {
                     if(!exists){
-                        startUp_controller.serverAPI.createAccount(user);
+                        startUp_controller.serverAPI.createAccount(account);
                         logger.info("Account Created");
                         this.startUp_controller.loadLoginEmailView();
                     }

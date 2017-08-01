@@ -4,6 +4,7 @@ import com.charana.chat_window.ui.main_view.ChatController;
 import com.charana.chat_window.ui.main_view.ServerUIInterface;
 import com.charana.login_window.BaseWindowController;
 import com.charana.login_window.ui.startup.StartUp_Controller;
+import com.charana.login_window.utilities.Procedure;
 import com.charana.server.message.ConnectionMessage;
 import com.charana.server.message.Message;
 import com.charana.server.message.PingMessage;
@@ -32,7 +33,7 @@ public class ServerConnector {
     Thread connect, receive, heartbeat;
     volatile boolean isConnected; //Heartbeat
     LinkedBlockingQueue<DatabaseResponseMessage> databaseResponses = new LinkedBlockingQueue<>();
-    private final Consumer<Void> hideWarningDialogCallback;
+    private final Procedure hideWarningDialogCallback;
     private final BiConsumer<String,String> showWarningDialogCallback;
     private final int serverPort;
     private final InetAddress serverIP;
@@ -41,7 +42,7 @@ public class ServerConnector {
     private String userID;
 
 
-    public ServerConnector(InetAddress serverIP, int serverPort, Consumer<Void> hideWarningDialogCallback,BiConsumer<String,String> showWarningDialogCallback){
+    public ServerConnector(InetAddress serverIP, int serverPort, Procedure hideWarningDialogCallback,BiConsumer<String,String> showWarningDialogCallback){
         this.hideWarningDialogCallback = hideWarningDialogCallback;
         this.showWarningDialogCallback = showWarningDialogCallback;
         this.serverIP = serverIP;
@@ -51,7 +52,7 @@ public class ServerConnector {
         connectToServer();
     }
 
-    public ServerConnector(InetAddress serverIP, int serverPort, Consumer<Void> hideWarningDialogCallback,BiConsumer<String,String> showWarningDialogCallback, ServerUIInterface serverUIInterface, String userID){
+    public ServerConnector(InetAddress serverIP, int serverPort, Procedure hideWarningDialogCallback, BiConsumer<String,String> showWarningDialogCallback, ServerUIInterface serverUIInterface, String userID){
         this.hideWarningDialogCallback = hideWarningDialogCallback;
         this.showWarningDialogCallback = showWarningDialogCallback;
         this.serverIP = serverIP;
@@ -71,7 +72,7 @@ public class ServerConnector {
                     try { Thread.sleep(1000); } //Wait for 1 second before Re-Connecting
                     catch (InterruptedException e) { logger.error("Current thread interrupted", e); }
                 }
-                hideWarningDialogCallback.accept(null);
+                hideWarningDialogCallback.run();
                 logger.info("Client successfully connected to server");
                 System.out.println("Screen Swap to Login Email");
             }

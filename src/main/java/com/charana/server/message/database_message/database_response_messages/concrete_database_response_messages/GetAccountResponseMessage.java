@@ -1,15 +1,16 @@
 package com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages;
 
 import com.charana.database_server.user.User;
+import com.charana.server.message.database_message.Account;
 import com.charana.server.message.database_message.database_response_messages.DatabaseResponseMessage;
 import java.util.UUID;
 
 
 public class GetAccountResponseMessage extends DatabaseResponseMessage {
-    public final User user;
+    public final Account account;
 
-    public GetAccountResponseMessage(UUID clientID, boolean success, User user) {
+    public GetAccountResponseMessage(UUID clientID, boolean success, Account account) {
         super(clientID, success);
-        this.user = user;
+        this.account = account;
     }
 }

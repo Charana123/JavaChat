@@ -1,7 +1,8 @@
 package com.charana.chat_window;
 
 import com.charana.chat_window.ui.contacts.UserContactButtonControl;
-import com.charana.database_server.user.DisplayName;
+import com.charana.server.message.database_message.Account;
+import com.charana.server.message.database_message.DisplayName;
 import com.charana.database_server.user.User;
 import com.charana.login_window.utilities.database.ServerAPI;
 import com.charana.login_window.utilities.database.ServerConnector;
@@ -24,9 +25,9 @@ public class UserContactButtonControl_TEST extends Application {
         ConnectionSource connectionSource = new JdbcConnectionSource("jdbc:h2:tcp://localhost:9081/~/Desktop/Application/database");
         InetAddress localhost = InetAddress.getByName("localhost");
         ServerAPI serverAPI = new ServerAPI(new ServerConnector(localhost, 8192, null, null));
-        serverAPI.getPossibleUsers(new DisplayName("Charana", null), (Boolean success, List<User> possibleUsers) -> {
-            User user = possibleUsers.get(0);
-            UserContactButtonControl userContactButtonControl = new UserContactButtonControl(user);
+        serverAPI.getPossibleUsers(new DisplayName("Charana", null), (Boolean success, List<Account> possibleAccounts) -> {
+            Account account = possibleAccounts.get(0);
+            UserContactButtonControl userContactButtonControl = new UserContactButtonControl(account, null);
             primaryStage.setScene(new Scene(userContactButtonControl));
             primaryStage.show();
         });

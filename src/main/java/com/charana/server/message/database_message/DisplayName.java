@@ -1,4 +1,4 @@
-package com.charana.database_server.user;
+package com.charana.server.message.database_message;
 
 import java.io.Serializable;
 

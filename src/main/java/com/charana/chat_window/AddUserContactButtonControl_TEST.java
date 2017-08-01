@@ -3,7 +3,8 @@ package com.charana.chat_window;/**
  */
 
 import com.charana.chat_window.ui.contacts.add_contact.AddUserContactButtonControl;
-import com.charana.database_server.user.DisplayName;
+import com.charana.server.message.database_message.Account;
+import com.charana.server.message.database_message.DisplayName;
 import com.charana.database_server.user.User;
 import com.charana.login_window.utilities.database.ServerAPI;
 import com.charana.login_window.utilities.database.ServerConnector;
@@ -25,11 +26,9 @@ public class AddUserContactButtonControl_TEST extends Application {
         InetAddress localhost = InetAddress.getByName("localhost");
         ServerConnector serverConnector = new ServerConnector(localhost, 8192, null, null);
         ServerAPI serverAPI = new ServerAPI(serverConnector);
-        serverAPI.getPossibleUsers(new DisplayName("Albie", null), (Boolean success, List<User> users) -> {
-            User user = users.get(0);
-            AddUserContactButtonControl addUserContactButtonControl = new AddUserContactButtonControl(user, event -> {
-
-            });
+        serverAPI.getPossibleUsers(new DisplayName("Albie", null), (Boolean success, List<Account> possibleAccounts) -> {
+            Account account = possibleAccounts.get(0);
+            AddUserContactButtonControl addUserContactButtonControl = new AddUserContactButtonControl(account, event -> {});
             primaryStage.setScene(new Scene(addUserContactButtonControl));
             primaryStage.show();
         });

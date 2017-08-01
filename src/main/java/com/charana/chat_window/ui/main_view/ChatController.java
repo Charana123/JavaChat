@@ -12,6 +12,9 @@ import com.charana.database_server.user.User;
 import com.charana.login_window.BaseWindowController;
 import com.charana.login_window.utilities.database.ServerAPI;
 import com.charana.login_window.utilities.database.ServerConnector;
+import com.charana.server.message.database_message.Account;
+import com.charana.server.message.database_message.FriendRequest;
+import com.charana.server.message.friend_requests.FriendRequestResponseType;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -45,56 +48,52 @@ public class ChatController extends BaseWindowController implements Initializabl
     private final ServerConnector serverConnector;
     private final ServerAPI serverAPI;
     private final Stage chatStage;
-    private User user;
+    private Account account;
 
 
-    private ChatController(Stage chatStage, User user, InetAddress serverIP, int serverPort){
+    private ChatController(Stage chatStage, Account account, InetAddress serverIP, int serverPort){
         super();
         this.serverConnector = new ServerConnector(
                 serverIP,
                 serverPort,
-                (Void voidz) -> hideWarningDialog(),
+                () -> hideWarningDialog(),
                 (String warningHeader, String warningContent) -> showWarningDialog(warningHeader, warningContent),
                 this,
-                user.getEmail());
+                account.email);
         chatStage.setOnCloseRequest(event -> serverConnector.disconnect());
         this.serverAPI = new ServerAPI(serverConnector);
         this.chatStage = chatStage;
-        this.user = user;
+        this.account = account;
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         //Anything code prior to scene populating (attaching listeners, loading data from model)
         recentContactsItemsView = recentContacts.getItems();
-        notificationsButton.setGraphic(new NoNewNotificationsGraphic(notificationsButton.getPrefWidth()/2, notificationsButton.getPrefHeight()/2));
-        loadRecentContacts();
-    }
+        if(account.missedNotifications > 0){
+            notificationsButton.setGraphic(new NewNotificationsGraphic(notificationsButton.getPrefWidth()/2, notificationsButton.getPrefHeight()/2, account.missedNotifications));
+        }
+        else { notificationsButton.setGraphic(new NoNewNotificationsGraphic(notificationsButton.getPrefWidth()/2, notificationsButton.getPrefHeight()/2));}
 
-    void loadRecentContacts(){
-        serverAPI.getFriends(user.getEmail(), (Boolean success, List<User> friends) -> {
-            List<UserSidebarButtonControl> userSidebarButtonControls = friends.stream().map(friend -> new UserSidebarButtonControl(170, 50, friend)).collect(Collectors.toList());
-            recentContacts.getItems().addAll(userSidebarButtonControls);
-        });
     }
 
     @FXML
     void viewContacts(){
-        serverAPI.getFriends(user.getEmail(), (Boolean success, List<User> friends) -> {
-            Parent root = ContactsMainController.getInstance(user, friends, this);
+        serverAPI.getFriends(account.email, (Boolean success, List<Account> friends) -> {
+            Parent root = ContactsMainController.getInstance(account, friends, this);
             swapContent(root);
         });
     }
 
+
     @FXML
     void viewFriendNotifications(){
-        serverAPI.getAddFriendNotifications(user.getEmail(), (Boolean success, List<AddFriendNotification> addFriendNotification) -> {
+        serverAPI.getAddFriendNotifications(account.email, (Boolean success, List<FriendRequest> friendRequests) -> {
             if(success){
-                List<FriendNotificationControl> friendNotificationControls = addFriendNotification.stream().map(addFriendNotification -> {
-                    //TODO:: Get the user object (because you need the email of the user as well to send a response)
-                    return new FriendNotificationControl(addFriendNotification.getDisplayName(), addFriendNotification.getProfileImage(), null, null);
-                }).collect(Collectors.toList());
-                PopOver popOver = new NotificationPopoverControl(friendNotificationControls);
+                PopOver popOver = new NotificationPopoverControl(
+                        friendRequests,
+                        (String friedRequestSourceAccountEmail) -> serverAPI.sendFriendRequestResponseMessage(account.email, friedRequestSourceAccountEmail, FriendRequestResponseType.ACCEPT),
+                        (String friedRequestSourceAccountEmail) -> serverAPI.sendFriendRequestResponseMessage(account.email, friedRequestSourceAccountEmail, FriendRequestResponseType.REJECT));
                 popOver.setAnimated(false);
                 popOver.show(notificationsButton);
             }
@@ -118,8 +117,13 @@ public class ChatController extends BaseWindowController implements Initializabl
 
     //Interface - ViewSwapperInterface implemented methods
     public void viewAddContact(){
-        Parent root = AddContactController.getInstance(serverAPI, user);
+        Parent root = AddContactController.getInstance(serverAPI, account);
         swapContent(root);
+    }
+
+    public void loadRecentContact(Account friend){
+        UserSidebarButtonControl userSidebarButtonControl = new UserSidebarButtonControl(170, 50, friend);
+        recentContacts.getItems().add(userSidebarButtonControl);
     }
 
 
@@ -140,11 +144,11 @@ public class ChatController extends BaseWindowController implements Initializabl
 
 
 
-    public static Stage chatWindow(User user, InetAddress serverIP, int serverPort){
+    public static Stage chatWindow(Account account, InetAddress serverIP, int serverPort){
         FXMLLoader fxmlLoader = new FXMLLoader(ChatController.class.getResource("/views/chat_window/main_view/MainChatView.fxml"));
         try {
             Stage chatStage = new Stage();
-            fxmlLoader.setController(new ChatController(chatStage, user, serverIP, serverPort));
+            fxmlLoader.setController(new ChatController(chatStage, account, serverIP, serverPort));
             Parent root = fxmlLoader.load();
             chatStage.setScene(new Scene(root));
             return chatStage;

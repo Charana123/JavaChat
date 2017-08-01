@@ -32,16 +32,17 @@ public class H2DatabaseServer {
             //Create Users Tables
             ConnectionSource conn = new JdbcConnectionSource("jdbc:h2:tcp://localhost:9081/~/Desktop/Application/database");
             TableUtils.createTableIfNotExists(conn, User.class);
+            TableUtils.dropTable(conn, Friend.class, false);
             TableUtils.createTableIfNotExists(conn, Friend.class);
             TableUtils.dropTable(conn, AddFriendNotification.class, true);
             TableUtils.createTableIfNotExists(conn, AddFriendNotification.class);
 
 
 //            System.out.println();
-//            Dao<User, String> userDAO = DaoManager.createDao(conn, User.class);
-//            GenericRawResults<User> userGenericRawResults = userDAO.queryRaw("SELECT * FROM Users WHERE firstName REGEXP '(?i)cha([a-z])*'", userDAO.getRawRowMapper());
-//            List<User> users = userGenericRawResults.getResults();
-//            User user = users.get(0);
+//            Dao<Account, String> userDAO = DaoManager.createDao(conn, Account.class);
+//            GenericRawResults<Account> userGenericRawResults = userDAO.queryRaw("SELECT * FROM Users WHERE firstName REGEXP '(?i)cha([a-z])*'", userDAO.getRawRowMapper());
+//            List<Account> users = userGenericRawResults.getResults();
+//            Account user = users.get(0);
 //            System.out.println(user.getDisplayName());
 
         }

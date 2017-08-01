@@ -3,6 +3,7 @@ package com.charana.chat_window.ui.sidebar;
 
 import com.charana.database_server.user.Status;
 import com.charana.database_server.user.User;
+import com.charana.server.message.database_message.Account;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.control.Button;
@@ -20,18 +21,18 @@ public class UserSidebarButtonControl extends Button {
     private final String email;
     private Group statusContainer;
 
-    public UserSidebarButtonControl(double prefWidth, double prefHeight, User user){
-        this.email = user.getEmail();
+    public UserSidebarButtonControl(double prefWidth, double prefHeight, Account account){
+        this.email = account.email;
         imageRadius = (Math.min(prefWidth, prefHeight) - 10)/2;
 
         //Configure button
         setStyle("-fx-background-color: transparent");
         setPrefSize(prefWidth, prefHeight);
-        setText(user.getDisplayName().toString());
+        setText(account.displayName.toString());
         setAlignment(Pos.CENTER_LEFT);
 
         //Load and shape profile image
-        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(user.getProfileImage().image);
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(account.profileImage.image);
         ImageView imageView = new ImageView(new Image(byteArrayInputStream));
         imageView.setFitHeight(imageRadius*2); imageView.setFitWidth(imageRadius*2);
         Circle clip = new Circle(imageRadius, imageRadius, imageRadius);
@@ -39,7 +40,7 @@ public class UserSidebarButtonControl extends Button {
 
         //Load and shape status image
         statusContainer = new Group();
-        changeStatus(user.getStatus());
+        changeStatus(account.status);
 
         //Add content (profile & status image) to container
         StackPane container = new StackPane(imageView, statusContainer);

@@ -1,16 +1,21 @@
 package com.charana.server;
 
 
+import com.charana.database_server.not_persisted_user.FriendRequestDB;
+import com.charana.database_server.not_persisted_user.UserData;
 import com.charana.database_server.user.*;
+import com.charana.server.message.database_message.DisplayName;
 import com.j256.ormlite.dao.*;
-import com.j256.ormlite.jdbc.JdbcConnectionSource;
-import com.j256.ormlite.stmt.Where;
+import com.j256.ormlite.stmt.*;
 import com.j256.ormlite.support.ConnectionSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 
 public class DatabaseConnectorORM {
@@ -84,13 +89,8 @@ public class DatabaseConnectorORM {
 
     }
 
-    public boolean createAccount(User user){
+    public boolean createUser(User user){
         try {
-            friendDAO.create(new Friend("albie@gmail.com", user));
-            friendDAO.create(new Friend("rajat@gmail.com", user));
-            addFriendNotificationsDAO.create(new AddFriendNotification("albie@gmail.com", user));
-            addFriendNotificationsDAO.create(new AddFriendNotification("rajat@gmail.com", user));
-
             int creates = userDAO.create(user);
             if(creates == 1){
                 logger.info("Successfully created account");
@@ -108,7 +108,7 @@ public class DatabaseConnectorORM {
 //
 //        try{
 //            String query = "SELECT Users.* FROM Accounts INNER JOIN FriendshipAssociations ON Users.Email = FriendshipAssociations.FriendeeEmail WHERE FriendshipAssociations.FrienderEmail = ?";
-//            List<User> users = userDAO.queryRaw(query, userDAO.getRawRowMapper(), email).getResults();
+//            List<Account> users = userDAO.queryRaw(query, userDAO.getRawRowMapper(), email).getResults();
 //
 ////            ResultSet rs = pstmt.executeQuery();
 ////            printResultSet(rs);
@@ -119,15 +119,20 @@ public class DatabaseConnectorORM {
 //        return true;
 //    }
 
-    public User getAccount(String email){
+    public UserData getAccount(String email){
         try{
             User user = userDAO.queryForId(email);
+
+            QueryBuilder<AddFriendNotification, Integer> queryBuilder = addFriendNotificationsDAO.queryBuilder();
+            queryBuilder.where().eq(AddFriendNotification.TARGET_USER_FIELD_COLUMN_NAME, email).and().eq(AddFriendNotification.MISSED_NOTIFICATION_COLUMN_NAME, true);
+            long missedNotificationsNum = queryBuilder.countOf();
+
             if(user == null) {
                 logger.info("No such user (email: {}) exists", email);
                 return null;
             } else {
-                logger.info("User Found (email: {}", email);
-                return user;
+                logger.info("Account Found (email: {}", email);
+                return new UserData(user, missedNotificationsNum); //I need missed notifications number from somewhere
             }
         } catch (SQLException e) {
             logger.error("Getting user (email: {}) failed", email, e);
@@ -138,14 +143,16 @@ public class DatabaseConnectorORM {
     public List<User> getFriends(String email){
         try{
             User user = userDAO.queryForId(email);
-            CloseableIterator<Friend> friends = user.getFriends().closeableIterator();
-            Where<User, String> query = userDAO.queryBuilder().where().idEq(friends.first().getEmail());
-            friends.forEachRemaining(friend -> {
-                try{ query.or().idEq(friend.getEmail()); }
-                catch (SQLException e) { e.printStackTrace(); }
-            });
-            List<User> friendUserObjects = userDAO.query(query.prepare());
-            return friendUserObjects;
+            List<Friend> friends = new ArrayList<>(user.getFriends());
+            if(!friends.isEmpty()){
+                Where<User, String> query = userDAO.queryBuilder().where().idEq(friends.get(0).getEmail());
+                friends.subList(1, friends.size()).forEach(friend -> {
+                    try{ query.or().idEq(friend.getEmail()); }
+                    catch (SQLException e) { e.printStackTrace(); }
+                });
+                return userDAO.query(query.prepare());
+            }
+            return new ArrayList<>();
         }
         catch (SQLException e){
             logger.error("Failed to get friends (closed connection)", e);
@@ -153,7 +160,8 @@ public class DatabaseConnectorORM {
         }
     }
 
-    public List<User> getPossibleUsers(DisplayName displayName){
+    //TODO:: Filter all current friends from contact search results
+    public List<User> getPossibleUsers(String userEmail, DisplayName displayName){
         logger.info("Finding possible contects for '{}'", displayName.toString());
         try {
             if (displayName.firstName != null && displayName.lastName == null) {
@@ -161,12 +169,14 @@ public class DatabaseConnectorORM {
                 HashSet<User> users1 = new HashSet<>(userDAO.queryRaw("SELECT * FROM Users WHERE firstName REGEXP ?", userDAO.getRawRowMapper(), regexp).getResults());
                 HashSet<User> users2 = new HashSet<>(userDAO.queryRaw("SELECT * FROM Users WHERE lastName REGEXP ?", userDAO.getRawRowMapper(), regexp).getResults());
                 users1.addAll(users2);
+                users1.remove(new User(userEmail));
                 return new ArrayList<>(users1);
             }
             else if(displayName.firstName != null && displayName.lastName != null){
                 String regexp1 = "(?i)" + displayName.firstName + "(\\w)*";
                 String regexp2 = "(?i)" + displayName.lastName + "(\\w)*";
-                List<User> users = userDAO.queryRaw("SELECT * FROM Users WHERE firstName REGEX ? AND lastName REGEX ?", userDAO.getRawRowMapper(), regexp1, regexp2).getResults();
+                List<User> users = userDAO.queryRaw("SELECT * FROM Users WHERE (firstName REGEXP ?) AND (lastName REGEXP ?)", userDAO.getRawRowMapper(), regexp1, regexp2).getResults();
+                users.remove(new User(userEmail));
                 return users;
             }
             else {
@@ -180,24 +190,40 @@ public class DatabaseConnectorORM {
         }
     }
 
-    public List<User> getAddFriendNotifications(String email){
+    public List<FriendRequestDB> getAddFriendNotifications(String email){
         try{
             User user = userDAO.queryForId(email);
-            CloseableWrappedIterable<AddFriendNotification> notifications = user.getAddFriendNotification().getWrappedIterable();
-            for(AddFriendNotification addFriendNotification : notifications){
-                User sourceUser = userDAO.queryForId(addFriendNotification.getSourceEmail());
-            }
-            notifications.forEachRemaining(addFriendNotification -> {
+
+            //Get all AddFriendNotifications
+            CloseableWrappedIterable<AddFriendNotification> notificationsIterator = user.getAddFriendNotification().getWrappedIterable();
+            List<AddFriendNotification> AddFiendNotifications = StreamSupport.stream(notificationsIterator.spliterator(), false).collect(Collectors.toList());
+            notificationsIterator.close();
+
+            //Set all notification to seen (not missed)
+            UpdateBuilder<AddFriendNotification, Integer> updateBuilder = addFriendNotificationsDAO.updateBuilder();
+            updateBuilder.updateColumnValue(AddFriendNotification.MISSED_NOTIFICATION_COLUMN_NAME, false);
+            updateBuilder.where().eq(AddFriendNotification.TARGET_USER_FIELD_COLUMN_NAME, email).and().eq(AddFriendNotification.MISSED_NOTIFICATION_COLUMN_NAME, true);
+            updateBuilder.update();
+
+            //Convert to FriendRequestDB and return
+            List<FriendRequestDB> FriendNotifications = AddFiendNotifications.stream().map(addFriendNotificationDB -> {
                 try {
-                    User sourceUser = userDAO.queryForId(addFriendNotification.getSourceEmail());
-                    notificationUserHashMap.put(addFriendNotification, sourceUser);
-                } catch (SQLException e){
-                    logger.error("getAddFriendNotification Error, Query for user by id {} failed", addFriendNotification.getSourceEmail(), e);
+                    User sourceUser = userDAO.queryForId(addFriendNotificationDB.getSourceEmail());
+                    FriendRequestDB friendRequestDB = new FriendRequestDB(sourceUser, addFriendNotificationDB.isMissedNotification());
+                    return Optional.of(friendRequestDB);
                 }
-            });
-            return notificationUserHashMap;
-        } catch (SQLException e){
-            logger.error("getAddFriendNotification Error, Query for user by id {} failed", email, e);
+                catch (SQLException e){
+                    //TODO:: Remove friend notification from targetUser (if the sourceUser cannot be found)
+                    //TODO:: Fix removeFriendNotification to take aurguments in the correct order
+                    logger.error("getAddFriendNotification Error, Query for user by id {} failed", addFriendNotificationDB.getSourceEmail(), e);
+                    return Optional.empty();
+                }
+            }).filter(Optional::isPresent).map(optionalFriendRequestDB -> (FriendRequestDB) optionalFriendRequestDB.get()).collect(Collectors.toList());
+            Collections.reverse(FriendNotifications);
+            return  FriendNotifications;
+
+        } catch (SQLException | IOException e){
+            logger.error("Querying notifications for user {} failed", email, e);
             return null;
         }
     }
@@ -205,10 +231,19 @@ public class DatabaseConnectorORM {
     public boolean addFriendNotification(String sourceUserEmail, String targetUserEmail){
         try{
             User targetUser = userDAO.queryForId(targetUserEmail);
-            ForeignCollection<AddFriendNotification> addFriendNotification = targetUser.getAddFriendNotification();
-            addFriendNotification.add(new AddFriendNotification(sourceUserEmail , targetUser));
-            logger.info("Successfully added friend notification to targetUser {} from sourceUser {}", sourceUserEmail, targetUserEmail);
-            return true;
+            ForeignCollection<AddFriendNotification> addFriendNotifications = targetUser.getAddFriendNotification();
+
+            Boolean notificationPreviousSent = addFriendNotifications.stream()
+                    .anyMatch(addFriendNotification -> addFriendNotification.getSourceEmail().equals(sourceUserEmail));
+            if(!notificationPreviousSent){
+                addFriendNotifications.add(new AddFriendNotification(sourceUserEmail , targetUser, true));
+                logger.info("Successfully added friend notification to targetUser {} from sourceUser {}", sourceUserEmail, targetUserEmail);
+                return true;
+            }
+            else {
+                logger.info("Duplicate friend notification sent to targetUser {} from sourceUser {}", sourceUserEmail, targetUserEmail);
+                return false;
+            }
         }
         catch (SQLException e){
             logger.error("Could add friend notification to targetUser {} from sourceUser {}", targetUserEmail, sourceUserEmail, e);
@@ -216,7 +251,33 @@ public class DatabaseConnectorORM {
         }
     }
 
+    public boolean removeFriendNotification(String sourceUserEmail, String targetUserEmail){
+        try{
+            DeleteBuilder<AddFriendNotification, Integer> deleteBuilder = addFriendNotificationsDAO.deleteBuilder();
+            deleteBuilder.where().eq(AddFriendNotification.SOURCE_EMAIL_FIELD_COLUMN_NAME, targetUserEmail).and().eq(AddFriendNotification.TARGET_USER_FIELD_COLUMN_NAME, sourceUserEmail);
+            PreparedDelete<AddFriendNotification> preparedDelete = deleteBuilder.prepare();
+            addFriendNotificationsDAO.delete(preparedDelete);
+            logger.info("Successfully Removed friend notification from sourceUserEmail {} to targetUserEmail {}", targetUserEmail, sourceUserEmail);
+            return true;
+        }
+        catch (SQLException e){
+            logger.error("Error Removed friend notification from sourceUserEmail {} to targetUserEmail {}", targetUserEmail, sourceUserEmail, e);
+            return false;
+        }
+    }
 
+    public boolean addFriend(String sourceUserEmail, String targetUserEmail){
+        try{
+            User sourceUser = userDAO.queryForId(sourceUserEmail);
+            sourceUser.getFriends().add(new Friend(targetUserEmail, sourceUser));
+            logger.info("Successfully added user {} to user {} friendlist", targetUserEmail, sourceUserEmail);
+            return true;
+        }
+        catch (SQLException e){
+            logger.error("Failed to add user {} to user {} friendlist", targetUserEmail, sourceUserEmail, e);
+            return false;
+        }
+    }
 
     //Debugging Only
     private void printRawResults(GenericRawResults<String[]> rawResults){
@@ -229,20 +290,5 @@ public class DatabaseConnectorORM {
             }
             System.out.println("---------");
         }catch (SQLException e){ e.printStackTrace(); }
-    }
-
-    public static void main(String[] args){
-        try{
-            ConnectionSource connectionSource = new JdbcConnectionSource("jdbc:h2:tcp://localhost:9081/~/Desktop/Application/database");
-            DatabaseConnectorORM dbConnector = new DatabaseConnectorORM(connectionSource);
-            //List<User> friends = dbConnector.getFriends("charananandasena@yahoo.com");
-//            System.out.println(friends.size());
-//            friends.forEach(friend -> System.out.println(friend.getEmail()));
-            User user = dbConnector.getAccount("charananandasena@yahoo.com");
-            System.out.println(user.getEmail());
-        }
-        catch (SQLException e){
-            e.printStackTrace();
-        }
     }
 }

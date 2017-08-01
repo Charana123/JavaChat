@@ -4,27 +4,31 @@ import com.charana.chat_window.ui.main_view.ChatController;
 import com.charana.database_server.user.User;
 import com.charana.login_window.utilities.database.ServerAPI;
 import com.charana.login_window.utilities.database.ServerConnector;
+import com.charana.server.message.database_message.Account;
 import javafx.application.Application;
 import javafx.stage.Stage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetAddress;
 
-/**
- * Created by Charana on 7/26/17.
- */
 public class MainChatLauncher extends Application {
 
+    private static final Logger logger = LoggerFactory.getLogger(MainChatLauncher.class);
     static InetAddress serverIP;
     static int serverPort;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        ServerConnector serverConnector = new ServerConnector(serverIP, serverPort, null, null);
+        ServerConnector serverConnector = new ServerConnector(serverIP, serverPort, () -> {}, (a, b) -> {});
         ServerAPI serverAPI = new ServerAPI(serverConnector);
-        serverAPI.getAccount("albie@gmail.com", (Boolean success, User user) -> {
-            serverConnector.disconnect();
-            ChatController.chatWindow(user, serverIP, serverPort).show();
+        serverAPI.getAccount("rajat@gmail.com", (Boolean success, Account account) -> {
+            if(success){
+                serverConnector.disconnect();
+                ChatController.chatWindow(account, serverIP, serverPort).show();
+            }
+            else { logger.error("Account does not exist"); }
         });
     }
 

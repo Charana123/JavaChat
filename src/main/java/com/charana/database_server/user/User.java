@@ -1,5 +1,7 @@
 package com.charana.database_server.user;
 
+import com.charana.server.message.database_message.DisplayName;
+import com.charana.server.message.database_message.ProfileImage;
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
@@ -16,22 +18,21 @@ public class User implements Serializable {
     private String password;
     @DatabaseField (columnName = PROFILE_IMAGE_METADATA_FIELD_COLUMN_NAME, dataType = DataType.STRING)
     private String profileImageMetaData;
+    @DatabaseField (columnName = STATUS_FIELD_COLUMN_NAME, dataType = DataType.ENUM_STRING)
+    private Status status;
     @DatabaseField (columnName = FIRST_NAME_COLUMN_NAME, dataType = DataType.STRING)
     private String firstName;
     @DatabaseField (columnName = LAST_NAME_COLUMN_NAME, dataType = DataType.STRING)
     private String lastName;
-    @DatabaseField (columnName = STATUS_FIELD_COLUMN_NAME, dataType = DataType.ENUM_STRING)
-    private Status status;
     @DatabaseField (columnName = GENDER_FIELD_COLUMN_NAME, dataType = DataType.ENUM_STRING)
     private Gender gender;
     @DatabaseField (columnName = BIRTHDAY_FIELD_COLUMN_NAME, dataType = DataType.STRING)
     private String birthday;
     @ForeignCollectionField (eager = false)
-    ForeignCollection<Friend> friends;
+    private ForeignCollection<Friend> friends;
     @ForeignCollectionField (eager = false)
-    ForeignCollection<AddFriendNotification> addFriendNotification;
+    private ForeignCollection<AddFriendNotification> addFriendNotification;
 
-    private ProfileImage profileImage;
 
     public static final String NAME_FIELD_COLUMN_NAME = "Email";
     public static final String PASSWORD_FIELD_COLUMN_NAME = "Password";
@@ -48,10 +49,10 @@ public class User implements Serializable {
         this.email = email;
     }
 
-    public User(String email, String password, ProfileImage profileImage, DisplayName displayName, Status status, Gender gender, Birthday birthday) {
+    public User(String email, String password, String profileImageMetaData, DisplayName displayName, Status status, Gender gender, Birthday birthday) {
         this.email = email;
         this.password = password;
-        this.profileImage = profileImage;
+        this.profileImageMetaData = profileImageMetaData;
         this.firstName = displayName.firstName;
         this.lastName = displayName.lastName;
         this.status = status;
@@ -60,8 +61,6 @@ public class User implements Serializable {
     }
 
     //GETTERS
-    public ProfileImage getProfileImage() { return profileImage; }
-
     public String getEmail() { return email; }
 
     public String getPassword() { return password; }
@@ -72,7 +71,9 @@ public class User implements Serializable {
 
     public String getBirthday() { return birthday; }
 
-    public DisplayName getDisplayName() { return new DisplayName(firstName, lastName); }
+    public String getLastName() { return lastName; }
+
+    public String getFirstName() { return firstName; }
 
     public ForeignCollection<Friend> getFriends() { return friends; }
 
@@ -80,10 +81,18 @@ public class User implements Serializable {
 
     public ForeignCollection<AddFriendNotification> getAddFriendNotification() { return addFriendNotification; }
 
-    //SETTERS
-    public void setProfileImageMetaData(String profileImageMetaData) { this.profileImageMetaData = profileImageMetaData; }
 
-    public void setProfileImage(ProfileImage profileImage) { this.profileImage = profileImage; }
+    @Override
+    public boolean equals(Object obj){
+        User user1 = this;
+        if(user1 == obj) return true;
+        else if(obj instanceof User){
+            User user2 = (User) obj;
+            if(user1.hashCode() == user2.hashCode()) return true;
+        }
+        return false;
+    }
+
 
     @Override
     public int hashCode() {

@@ -1,13 +1,14 @@
 package com.charana.chat_window.ui.notification_tab;
 
-import com.charana.database_server.user.DisplayName;
-import com.charana.database_server.user.ProfileImage;
-import com.charana.database_server.user.User;
+import com.charana.server.message.database_message.DisplayName;
+import com.charana.server.message.database_message.ProfileImage;
+import com.charana.login_window.utilities.Procedure;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.shape.Rectangle;
@@ -22,17 +23,25 @@ import java.util.function.Consumer;
 public class FriendNotificationControl extends NotificationControl implements Initializable{
     private DisplayName sourceDisplayName;
     private ProfileImage sourceProfileImage;
+    private String sourceEmail;
     @FXML Button acceptButton;
     Consumer<String> onAcceptFriendRequestHandler;
     Consumer<String> onRejectFriendRequestHandler;
     @FXML Button rejectButton;
     @FXML Button contentButton;
+    private final boolean newNotication;
 
-    public FriendNotificationControl(DisplayName sourceDisplayName, ProfileImage sourceProfileImage, Consumer<String> onAcceptFriendRequestHandler, Consumer<String> onRejectFriendRequestHandler){
+    public FriendNotificationControl(String sourceEmail, DisplayName sourceDisplayName, ProfileImage sourceProfileImage, Consumer<String> onAcceptFriendRequestHandler, Consumer<String> onRejectFriendRequestHandler, ListView<FriendNotificationControl> parentListview, boolean newNotification){
+        this.sourceEmail = sourceEmail;
         this.sourceDisplayName = sourceDisplayName;
         this.sourceProfileImage = sourceProfileImage;
-        this.onAcceptFriendRequestHandler = onAcceptFriendRequestHandler;
-        this.onRejectFriendRequestHandler = onRejectFriendRequestHandler;
+        this.onAcceptFriendRequestHandler = onAcceptFriendRequestHandler.andThen((String friedRequestSourceAccountEmail) -> {
+            parentListview.getItems().remove(this);
+        });
+        this.onRejectFriendRequestHandler = onRejectFriendRequestHandler.andThen((String friedRequestSourceAccountEmail) -> {
+            parentListview.getItems().remove(this);
+        });
+        this.newNotication = newNotification;
 
         FXMLLoader fxmlLoader = new FXMLLoader(FriendNotificationControl.class.getResource("/views/chat_window/notifications/FriendNotification.fxml"));
         fxmlLoader.setController(this);
@@ -43,6 +52,8 @@ public class FriendNotificationControl extends NotificationControl implements In
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        if(newNotication) setStyle("-fx-background-color: #fffacd");
+
         contentButton.setText(sourceDisplayName.toString());
         contentButton.setAlignment(Pos.CENTER_LEFT);
 
@@ -56,11 +67,11 @@ public class FriendNotificationControl extends NotificationControl implements In
 
     @FXML
     void acceptFriendRequest(){
-        //onAcceptFriendRequestHandler.accept();
+        onAcceptFriendRequestHandler.accept(sourceEmail);
     }
 
     @FXML
     void rejectFriendRequest(){
-
+        onRejectFriendRequestHandler.accept(sourceEmail);
     }
 }

@@ -11,6 +11,7 @@ import com.charana.login_window.ui.login_password.LoginPassword_Controller;
 import com.charana.login_window.ui.reenter_password.ReenterPassword_Controller;
 import com.charana.login_window.utilities.database.ServerAPI;
 import com.charana.login_window.utilities.database.ServerConnector;
+import com.charana.server.message.database_message.Account;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
@@ -43,7 +44,7 @@ public class StartUp_Controller extends BaseWindowController implements Initiali
         this.serverConnector = new ServerConnector(
                 serverIP,
                 serverPort,
-                (Void voidz) -> hideWarningDialog(),
+                () -> hideWarningDialog(),
                 (String warningHeader, String warningContent) -> showWarningDialog(warningHeader, warningContent));
         loginStage.setOnCloseRequest(event -> serverConnector.disconnect() );
         this.serverAPI = new ServerAPI(serverConnector);
@@ -89,9 +90,9 @@ public class StartUp_Controller extends BaseWindowController implements Initiali
         new Thread(() -> {
             try { Thread.sleep(2000); }
             catch (InterruptedException e) { logger.error("JavaFX Application thread interrupted", e); return; }
-            serverAPI.getAccount(email, (Boolean success, User user) -> {
+            serverAPI.getAccount(email, (Boolean success, Account account) -> {
                 serverConnector.disconnect();
-                Stage chatWindow = ChatController.chatWindow(user, serverIP, serverPort);
+                Stage chatWindow = ChatController.chatWindow(account, serverIP, serverPort);
                 loginStage.hide();
                 chatWindow.show();
             });

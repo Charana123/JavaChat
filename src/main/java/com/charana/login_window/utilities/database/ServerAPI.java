@@ -1,9 +1,10 @@
 package com.charana.login_window.utilities.database;
 
-import com.charana.database_server.user.AddFriendNotification;
-import com.charana.database_server.user.DisplayName;
+import com.charana.server.message.database_message.Account;
+import com.charana.server.message.database_message.DisplayName;
 import com.charana.database_server.user.User;
 import com.charana.server.message.Message;
+import com.charana.server.message.database_message.FriendRequest;
 import com.charana.server.message.database_message.database_command_messages.concrete_database_command_messages.*;
 import com.charana.server.message.database_message.database_response_messages.DatabaseResponseMessage;
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetAccountResponseMessage;
@@ -11,6 +12,8 @@ import com.charana.server.message.database_message.database_response_messages.co
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetFriendsResponseMessage;
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetPossibleUsersResponseMessage;
 import com.charana.server.message.friend_requests.FriendRequestMessage;
+import com.charana.server.message.friend_requests.FriendRequestResponseMessage;
+import com.charana.server.message.friend_requests.FriendRequestResponseType;
 import javafx.application.Platform;
 
 import java.util.List;
@@ -49,37 +52,37 @@ public class ServerAPI {
 
     //Does not require completionHandler
     //Does not require anything (from the response) and therefore does not update anything based on the content of the response
-    public void createAccount(User user){
+    public void createAccount(Account account){
         new Thread(() -> {
-            sendAndRecieve(new CreateAccountMessage(null, user));
+            sendAndRecieve(new CreateAccountMessage(null, account));
         }).start();
     }
 
-    public void getAccount(String email, BiConsumer<Boolean, User> completionHandler){
+    public void getAccount(String email, BiConsumer<Boolean, Account> completionHandler){
         new Thread(() -> {
             GetAccountResponseMessage response = (GetAccountResponseMessage) sendAndRecieve(new GetAccountMessage(null, email));
-            Platform.runLater(() -> completionHandler.accept(response.success, response.user));
+            Platform.runLater(() -> completionHandler.accept(response.success, response.account));
         }).start();
     }
 
-    public void getFriends(String email, BiConsumer<Boolean, List<User>> completionHandler){
+    public void getFriends(String email, BiConsumer<Boolean, List<Account>> completionHandler){
         new Thread(() -> {
             GetFriendsResponseMessage response = (GetFriendsResponseMessage) sendAndRecieve(new GetFriendsMessage(null, email));
             Platform.runLater(() -> completionHandler.accept(response.success, response.friends));
         }).start();
     }
 
-    public void getPossibleUsers(DisplayName displayName, BiConsumer<Boolean, List<User>> completionHandler){
+    public void getPossibleUsers(DisplayName displayName, BiConsumer<Boolean, List<Account>> completionHandler){
         new Thread(() -> {
             GetPossibleUsersResponseMessage response = (GetPossibleUsersResponseMessage) sendAndRecieve(new GetPossibleUsersMessage(null, displayName));
             Platform.runLater(() -> completionHandler.accept(response.success, response.possibleUsers));
         }).start();
     }
 
-    public void getAddFriendNotifications(String email, BiConsumer<Boolean, List<AddFriendNotification>> completionHandler){
+    public void getAddFriendNotifications(String email, BiConsumer<Boolean, List<FriendRequest>> completionHandler){
         new Thread(() -> {
             GetAddFriendNotificationsResponseMessage response = (GetAddFriendNotificationsResponseMessage) sendAndRecieve(new GetAddFriendNotificationsMessage(null , email));
-            Platform.runLater(() -> completionHandler.accept(response.success, response.addFriendNotification));
+            Platform.runLater(() -> completionHandler.accept(response.success, response.addFriendNotificationUsers));
         }).start();
     }
 
@@ -101,6 +104,10 @@ public class ServerAPI {
     //OTHER SERVER MESSAGES
     public void sendFriendRequestMessage(String sourceUserEmail, String targetUserEmail){
         sendUntilRecieved(new FriendRequestMessage(null, sourceUserEmail, targetUserEmail));
+    }
+
+    public void sendFriendRequestResponseMessage(String sourceUserEmail, String targetUserEmail, FriendRequestResponseType responseType){
+        sendUntilRecieved(new FriendRequestResponseMessage(null, sourceUserEmail, targetUserEmail, responseType));
     }
 
     private void sendUntilRecieved(Message message){

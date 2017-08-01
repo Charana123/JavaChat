@@ -1,14 +1,20 @@
 package com.charana.server;
 
-import com.charana.database_server.user.AddFriendNotification;
-import com.charana.database_server.user.ProfileImage;
-import com.charana.database_server.user.User;
+import com.charana.database_server.not_persisted_user.FriendRequestDB;
+import com.charana.database_server.not_persisted_user.UserData;
+import com.charana.database_server.user.*;
+import com.charana.server.message.database_message.Account;
+import com.charana.server.message.database_message.DisplayName;
+import com.charana.server.message.database_message.FriendRequest;
+import com.charana.server.message.database_message.ProfileImage;
 import com.charana.server.message.*;
 import com.charana.server.message.database_message.database_command_messages.*;
 import com.charana.server.message.database_message.database_command_messages.concrete_database_command_messages.*;
 import com.charana.server.message.database_message.database_response_messages.*;
 import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.*;
 import com.charana.server.message.friend_requests.FriendRequestMessage;
+import com.charana.server.message.friend_requests.FriendRequestResponseMessage;
+import com.charana.server.message.friend_requests.FriendRequestResponseType;
 import com.j256.ormlite.support.ConnectionSource;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -21,6 +27,7 @@ import java.util.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Server {
     public final int serverPort = 8192;
@@ -144,12 +151,12 @@ public class Server {
                     if(success){ sendToClient(friendRequestMessage.sourceUserEmail, friendRequestMessage.targetUserEmail, friendRequestMessage); }
                     break;
                 case FRIEND_REQUEST_RESPONSE:
-                    //TODO:: Whenever the client response (via accept or reject) we get a accept/reject message
-                    //TODO:: We remove the notification from the database
-                    //TODO:: If reject we do nothing else
-                    //TODO:: If accept we add the sourceUser to our targetUsers friends list and vice versa
-                    //TODO:: Whenever the users (source or target) next look at their friends list (which refreshes the friends list via new database call)
-                    //TODO:: The will see each other
+                    FriendRequestResponseMessage friendRequestResponseMessage = (FriendRequestResponseMessage) message;
+                    dbconn.removeFriendNotification(friendRequestResponseMessage.sourceUserEmail, friendRequestResponseMessage.targetUserEmail);
+                    if(friendRequestResponseMessage.responseType == FriendRequestResponseType.ACCEPT){
+                        dbconn.addFriend(friendRequestResponseMessage.sourceUserEmail, friendRequestResponseMessage.targetUserEmail);
+                        dbconn.addFriend(friendRequestResponseMessage.targetUserEmail, friendRequestResponseMessage.sourceUserEmail);
+                    }
                     break;
             }
         }
@@ -165,8 +172,8 @@ public class Server {
                     break;
                 case CREATE_ACCOUNT:
                     CreateAccountMessage createAccountMessage = (CreateAccountMessage) message;
-                    storeImageAndSetMetaData(createAccountMessage.user);
-                    result = dbconn.createAccount(createAccountMessage.user);
+                    User user = accountToUser(createAccountMessage.account);
+                    result = dbconn.createUser(user);
                     send(new DatabaseResponseMessage(null, result));
                     break;
                 case ACCOUNT_EXISTS:
@@ -182,48 +189,73 @@ public class Server {
                     break;
                 case GET_ACCOUNT:
                     GetAccountMessage getAccountMessage = (GetAccountMessage) message;
-                    User user = dbconn.getAccount(getAccountMessage.email);
-                    if(user !=  null) {
-                        user.setProfileImage(getProfileImage(user.getProfileImageMetaData()));
-                        send(new GetAccountResponseMessage(null, true, user));
+                    UserData userData = dbconn.getAccount(getAccountMessage.email);
+                    if(userData !=  null) {
+                        Account account = userToAccount(userData.user, userData.missedNotifications);
+                        send(new GetAccountResponseMessage(null, true, account));
                     } else { send(new GetAccountResponseMessage(null, false, null)); }
                     break;
                 case GET_FRIENDS:
                     GetFriendsMessage getFriendsMessage = (GetFriendsMessage) message;
-                    List<User> friends = dbconn.getFriends(getFriendsMessage.email);
-                    if(friends !=  null) {
-                        friends.forEach(friend -> friend.setProfileImage(getProfileImage(friend.getProfileImageMetaData())));
-                        send(new GetFriendsResponseMessage(null, true, friends));
+                    List<User> friendsUsers = dbconn.getFriends(getFriendsMessage.email);
+                    if(friendsUsers !=  null) {
+                        List<Account> friendsAccounts = friendsUsers.stream().map(friendUser -> userToAccount(friendUser)).collect(Collectors.toList());
+                        send(new GetFriendsResponseMessage(null, true, friendsAccounts));
                     } else { send(new GetFriendsResponseMessage(null, false, null));}
                     break;
                 case GET_POSSIBLE_USERS:
                     GetPossibleUsersMessage getPossibleUsersMessage = (GetPossibleUsersMessage) message;
-                    List<User> possibleUsers = dbconn.getPossibleUsers(getPossibleUsersMessage.displayName);
+                    List<User> possibleUsers = dbconn.getPossibleUsers(thisClient.name, getPossibleUsersMessage.displayName);
                     if(possibleUsers != null) {
-                        possibleUsers.forEach(possibleUser -> possibleUser.setProfileImage(getProfileImage(possibleUser.getProfileImageMetaData())));
-                        send(new GetPossibleUsersResponseMessage(null, true, possibleUsers));
+                        List<Account> possibleAccounts = possibleUsers.stream().map(possibleUser -> userToAccount(possibleUser)).collect(Collectors.toList());
+                        send(new GetPossibleUsersResponseMessage(null, true, possibleAccounts));
                     } else { send(new GetPossibleUsersResponseMessage(null, false, null)); }
                     break;
                 case GET_ADD_FRIEND_NOTIFICATIONS:
                     GetAddFriendNotificationsMessage getAddFriendNotificationsMessage = (GetAddFriendNotificationsMessage) message;
-                    HashMap<AddFriendNotification, User> addFriendNotificationUserHashMap = dbconn.getAddFriendNotifications(getAddFriendNotificationsMessage.email);
-                    if(addFriendNotificationUserHashMap != null) {
-                        addFriendNotificationUserHashMap.forEach(((addFriendNotification, sourceUser) -> {
-                            addFriendNotification.setDisplayName(sourceUser.getDisplayName());
-                            addFriendNotification.setProfileImage(getProfileImage(sourceUser.getProfileImageMetaData()));
-                        }));
-                        List<AddFriendNotification> addFriendNotification = Arrays.asList(addFriendNotificationUserHashMap.keySet().toArray(new AddFriendNotification[] {}));
-                        send(new GetAddFriendNotificationsResponseMessage(null, true, addFriendNotification));
+                    List<FriendRequestDB> addFriendNotifications = dbconn.getAddFriendNotifications(getAddFriendNotificationsMessage.email);
+                    if(addFriendNotifications != null) {
+                        List<FriendRequest> addFriendNotificationAccounts = addFriendNotifications.stream().map(friendNotificationDB -> new FriendRequest(userToAccount(friendNotificationDB.sourceUser), friendNotificationDB.missedNotification)).collect(Collectors.toList());
+                        send(new GetAddFriendNotificationsResponseMessage(null, true, addFriendNotificationAccounts));
                     } else { send(new GetAddFriendNotificationsResponseMessage(null, false, null)); }
                     break;
             }
         }
 
-        private ProfileImage getProfileImage(String profileImageMetaData){
+        private Account userToAccount(User user, long missedNotifications){
+            ProfileImage profileImage = loadProfileImage(user.getProfileImageMetaData());
+
+            return new Account(
+                    user.getEmail(),
+                    user.getPassword(),
+                    profileImage,
+                    user.getStatus(),
+                    new DisplayName(user.getFirstName(), user.getLastName()),
+                    user.getGender(),
+                    Birthday.fromString(user.getBirthday()),
+                    new ArrayList<Friend>(user.getFriends()),
+                    new ArrayList<AddFriendNotification>(user.getAddFriendNotification()),
+                    missedNotifications);
+        }
+
+        private Account userToAccount(User user){
+            ProfileImage profileImage = loadProfileImage(user.getProfileImageMetaData());
+
+            return new Account(
+                    user.getEmail(),
+                    user.getPassword(),
+                    profileImage,
+                    user.getStatus(),
+                    new DisplayName(user.getFirstName(), user.getLastName()),
+                    user.getGender(),
+                    Birthday.fromString(user.getBirthday()));
+        }
+
+        private ProfileImage loadProfileImage(String path){
             try {
-                FileInputStream fileInputStream = new FileInputStream(new File(profileImageMetaData));
+                FileInputStream fileInputStream = new FileInputStream(new File(path));
                 byte[] profileImage = IOUtils.toByteArray(fileInputStream);
-                String format = FilenameUtils.getExtension(profileImageMetaData);
+                String format = FilenameUtils.getExtension(path);
                 return new ProfileImage(profileImage, format);
             }
             catch (IOException e){
@@ -232,22 +264,34 @@ public class Server {
             }
         }
 
-        private void storeImageAndSetMetaData(User user){
-            String username = user.getEmail().split("@")[0];
-            String outputPath = storagePath + username + "." + user.getProfileImage().format;
-            //Set MetaData
-            user.setProfileImageMetaData(outputPath);
+        private User accountToUser(Account account){
+            String profileImageMetaData = storeImageReturnPath(account.email, account.profileImage);
 
-            //Store Image
-            File outputFile = new File(outputPath);
-            new ByteArrayInputStream(user.getProfileImage().image);
-            try {
+            return new User(
+                    account.email,
+                    account.password,
+                    profileImageMetaData,
+                    account.displayName,
+                    account.status,
+                    account.gender,
+                    account.birthday
+            );
+        }
+
+        private String storeImageReturnPath(String sourceEmail, ProfileImage profileImage){
+            String username = sourceEmail.split("@")[0];
+            String outputPath = storagePath + username + "." + profileImage.format;
+
+            try { //Store Image
+                File outputFile = new File(outputPath);
                 FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
-                fileOutputStream.write(user.getProfileImage().image);
+                fileOutputStream.write(profileImage.image);
             }
             catch (IOException e){
-                logger.error("User '{}' profile image could not be saved", user.getEmail(), e);
+                logger.error("Account '{}' profile image could not be saved", sourceEmail, e);
             }
+
+            return outputPath;
         }
 
         private void sendToClient(String sourceUserEmail, String targetUserEmail, Message message){
@@ -288,7 +332,7 @@ public class Server {
                 }
             }
             catch (IOException e) { //If message would not to transferred to managed client, Log ERROR of the lost message
-                logger.error("Message {} could not be sent to client {} (socket closed)", message.type, thisClient.name, e);
+                logger.error("Message {} could not be sent to client {} (socket closed)", message.type, clientName, e);
             }
         }
 
