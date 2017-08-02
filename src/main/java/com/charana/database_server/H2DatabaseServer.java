@@ -32,7 +32,7 @@ public class H2DatabaseServer {
             //Create Users Tables
             ConnectionSource conn = new JdbcConnectionSource("jdbc:h2:tcp://localhost:9081/~/Desktop/Application/database");
             TableUtils.createTableIfNotExists(conn, User.class);
-            TableUtils.dropTable(conn, Friend.class, false);
+            //TableUtils.dropTable(conn, Friend.class, false);
             TableUtils.createTableIfNotExists(conn, Friend.class);
             TableUtils.dropTable(conn, AddFriendNotification.class, true);
             TableUtils.createTableIfNotExists(conn, AddFriendNotification.class);

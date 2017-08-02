@@ -27,7 +27,7 @@ public class UserContactButtonControl_TEST extends Application {
         ServerAPI serverAPI = new ServerAPI(new ServerConnector(localhost, 8192, null, null));
         serverAPI.getPossibleUsers(new DisplayName("Charana", null), (Boolean success, List<Account> possibleAccounts) -> {
             Account account = possibleAccounts.get(0);
-            UserContactButtonControl userContactButtonControl = new UserContactButtonControl(account, null);
+            UserContactButtonControl userContactButtonControl = new UserContactButtonControl(account);
             primaryStage.setScene(new Scene(userContactButtonControl));
             primaryStage.show();
         });

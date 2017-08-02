@@ -30,15 +30,9 @@ public class UserContactButtonControl extends HBox implements Initializable{
     @FXML Button listField;
     @FXML Button locationField;
     Account account;
-    ListView<UserContactButtonControl> parentListview;
 
-    public UserContactButtonControl(Account account, Procedure onMouseClicked){
+    public UserContactButtonControl(Account account){
         this.account = account;
-
-        this.setOnMouseClicked((event) -> {
-            System.out.println("Button Control Clicked!");
-            onMouseClicked.run();
-        });
 
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/chat_window/contacts/UserContactButtonControl.fxml"));
         fxmlLoader.setRoot(this);
@@ -50,6 +44,9 @@ public class UserContactButtonControl extends HBox implements Initializable{
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        this.setOnMouseClicked((event) -> {
+            System.out.println("Hello world");
+        });
         ImageView profilePicture = new ImageView(new Image(new ByteArrayInputStream(account.profileImage.image)));
         double imageDimension = 40;
         profilePicture.setFitHeight(imageDimension); profilePicture.setFitWidth(imageDimension);
@@ -75,5 +72,7 @@ public class UserContactButtonControl extends HBox implements Initializable{
     private void toggleFavourite(){
         FontAwesomeIconView favouriteStatus = (FontAwesomeIconView) favouritesField.getGraphic();
         favouriteStatus.setGlyphName(favouriteStatus.getGlyphName().equals("STAR") ? "STAR_ALT" : "STAR");
+
+        System.out.println("Hello TOGGLE");
     }
 }

@@ -19,8 +19,6 @@ public class Account implements Serializable{
     public final Birthday birthday;
 
     //Sent by Database
-    public List<Friend> friends;
-    public List<AddFriendNotification> addFriendNotification;
     public long missedNotifications;
 
     public Account(String email, String password,  ProfileImage profileImage, Status status, DisplayName displayName, Gender gender, Birthday birthday){
@@ -35,23 +33,8 @@ public class Account implements Serializable{
     }
 
 
-    public Account(String email, String password, ProfileImage profileImage, Status status, DisplayName displayName, Gender gender, Birthday birthday, List<Friend> friends, List<AddFriendNotification> addFriendNotifications, long missedNotifications){
+    public Account(String email, String password, ProfileImage profileImage, Status status, DisplayName displayName, Gender gender, Birthday birthday, long missedNotifications){
         this(email, password, profileImage, status, displayName, gender, birthday);
-        this.friends = friends;
-        this.addFriendNotification  = addFriendNotifications;
         this.missedNotifications = missedNotifications;
-    }
-
-    @Override
-    public String toString() {
-        return "Account{" +
-                "email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", profileImage=" + profileImage +
-                ", status=" + status +
-                ", displayName=" + displayName +
-                ", gender=" + gender +
-                ", birthday=" + birthday +
-                '}';
     }
 }

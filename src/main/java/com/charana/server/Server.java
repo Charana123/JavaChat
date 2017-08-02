@@ -233,8 +233,6 @@ public class Server {
                     new DisplayName(user.getFirstName(), user.getLastName()),
                     user.getGender(),
                     Birthday.fromString(user.getBirthday()),
-                    new ArrayList<Friend>(user.getFriends()),
-                    new ArrayList<AddFriendNotification>(user.getAddFriendNotification()),
                     missedNotifications);
         }
 

@@ -36,9 +36,7 @@ public class ContactsMainController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        List<UserContactButtonControl> userContactButtonControls = friends.stream().map(friend -> new UserContactButtonControl(friend, () -> {
-            viewSwapper.loadRecentContact(friend);
-        })).collect(Collectors.toList());
+        List<UserContactButtonControl> userContactButtonControls = friends.stream().map(friend -> new UserContactButtonControl(friend)).collect(Collectors.toList());
         refreshList(userContactButtonControls);
     }
 

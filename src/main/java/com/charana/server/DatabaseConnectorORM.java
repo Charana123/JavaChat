@@ -92,6 +92,9 @@ public class DatabaseConnectorORM {
     public boolean createUser(User user){
         try {
             int creates = userDAO.create(user);
+            friendDAO.create(new Friend("albie@gmail.com", user));
+            friendDAO.create(new Friend("rajat@gmail.com", user));
+
             if(creates == 1){
                 logger.info("Successfully created account");
                 return true;
