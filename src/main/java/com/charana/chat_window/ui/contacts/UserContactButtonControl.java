@@ -5,6 +5,7 @@ import com.charana.login_window.utilities.Procedure;
 import com.charana.server.message.database_message.Account;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -12,6 +13,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.shape.Circle;
 
@@ -31,8 +33,9 @@ public class UserContactButtonControl extends HBox implements Initializable{
     @FXML Button locationField;
     Account account;
 
-    public UserContactButtonControl(Account account){
+    public UserContactButtonControl(Account account, Procedure onMouseClicked){
         this.account = account;
+        this.addEventFilter(MouseEvent.MOUSE_CLICKED, (MouseEvent event) -> onMouseClicked.run());
 
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/chat_window/contacts/UserContactButtonControl.fxml"));
         fxmlLoader.setRoot(this);
@@ -44,9 +47,7 @@ public class UserContactButtonControl extends HBox implements Initializable{
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        this.setOnMouseClicked((event) -> {
-            System.out.println("Hello world");
-        });
+
         ImageView profilePicture = new ImageView(new Image(new ByteArrayInputStream(account.profileImage.image)));
         double imageDimension = 40;
         profilePicture.setFitHeight(imageDimension); profilePicture.setFitWidth(imageDimension);

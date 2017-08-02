@@ -10,6 +10,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
+import javafx.scene.input.MouseEvent;
 
 import java.io.IOException;
 import java.net.URL;
@@ -36,7 +37,9 @@ public class ContactsMainController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        List<UserContactButtonControl> userContactButtonControls = friends.stream().map(friend -> new UserContactButtonControl(friend)).collect(Collectors.toList());
+        List<UserContactButtonControl> userContactButtonControls = friends.stream().map(friend -> new UserContactButtonControl(friend, () -> {
+            viewSwapper.loadRecentContact(friend);
+        })).collect(Collectors.toList());
         refreshList(userContactButtonControls);
     }
 
