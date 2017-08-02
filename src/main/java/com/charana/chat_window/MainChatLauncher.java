@@ -23,7 +23,7 @@ public class MainChatLauncher extends Application {
     public void start(Stage primaryStage) throws Exception {
         ServerConnector serverConnector = new ServerConnector(serverIP, serverPort, () -> {}, (a, b) -> {});
         ServerAPI serverAPI = new ServerAPI(serverConnector);
-        serverAPI.getAccount("albie@gmail.com", (Boolean success, Account account) -> {
+        serverAPI.getAccount("rajat@gmail.com", (Boolean success, Account account) -> {
             if(success){
                 serverConnector.disconnect();
                 ChatController.chatWindow(account, serverIP, serverPort).show();

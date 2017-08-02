@@ -1,6 +1,7 @@
 package com.charana.chat_window.ui.notification_tab;
 
 import com.charana.server.message.database_message.DisplayName;
+import com.charana.server.message.database_message.FriendRequest;
 import com.charana.server.message.database_message.ProfileImage;
 import com.charana.login_window.utilities.Procedure;
 import javafx.fxml.FXML;
@@ -31,16 +32,12 @@ public class FriendNotificationControl extends NotificationControl implements In
     @FXML Button contentButton;
     private final boolean newNotication;
 
-    public FriendNotificationControl(String sourceEmail, DisplayName sourceDisplayName, ProfileImage sourceProfileImage, Consumer<String> onAcceptFriendRequestHandler, Consumer<String> onRejectFriendRequestHandler, ListView<FriendNotificationControl> parentListview, boolean newNotification){
-        this.sourceEmail = sourceEmail;
-        this.sourceDisplayName = sourceDisplayName;
-        this.sourceProfileImage = sourceProfileImage;
-        this.onAcceptFriendRequestHandler = onAcceptFriendRequestHandler.andThen((String friedRequestSourceAccountEmail) -> {
-            parentListview.getItems().remove(this);
-        });
-        this.onRejectFriendRequestHandler = onRejectFriendRequestHandler.andThen((String friedRequestSourceAccountEmail) -> {
-            parentListview.getItems().remove(this);
-        });
+    public FriendNotificationControl(FriendRequest friendRequest, Consumer<String> onAcceptFriendRequestHandler, Consumer<String> onRejectFriendRequestHandler, ListView<FriendRequest> parentListview, boolean newNotification){
+        this.sourceEmail = friendRequest.sourceAccount.email;
+        this.sourceDisplayName = friendRequest.sourceAccount.displayName;
+        this.sourceProfileImage = friendRequest.sourceAccount.profileImage;
+        this.onAcceptFriendRequestHandler = onAcceptFriendRequestHandler;
+        this.onRejectFriendRequestHandler = onRejectFriendRequestHandler;
         this.newNotication = newNotification;
 
         FXMLLoader fxmlLoader = new FXMLLoader(FriendNotificationControl.class.getResource("/views/chat_window/notifications/FriendNotification.fxml"));
@@ -52,7 +49,7 @@ public class FriendNotificationControl extends NotificationControl implements In
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        if(newNotication) setStyle("-fx-background-color: #fffacd");
+        if(newNotication) setStyle("-fx-background-color: #FFFACD");
 
         contentButton.setText(sourceDisplayName.toString());
         contentButton.setAlignment(Pos.CENTER_LEFT);

@@ -4,13 +4,16 @@ import com.charana.chat_window.ui.main_view.ViewSwapperInterface;
 import com.charana.database_server.user.User;
 import com.charana.login_window.utilities.database.ServerAPI;
 import com.charana.server.message.database_message.Account;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.input.MouseEvent;
+import javafx.util.Callback;
 
 import java.io.IOException;
 import java.net.URL;
@@ -23,10 +26,11 @@ public class ContactsMainController implements Initializable {
     @FXML Button allButton;
     @FXML Button allFavouritesButton;
     @FXML Button addContactButton;
-    @FXML ListView<UserContactButtonControl> contactsListview;
+    @FXML ListView<Account> contactsListview;
     ServerAPI dbConnector;
-    private Account account;
     private List<Account> friends;
+    private Account account;
+
     private ViewSwapperInterface viewSwapper;
 
     private ContactsMainController(Account account, List<Account> friends, ViewSwapperInterface viewSwapper){
@@ -37,15 +41,23 @@ public class ContactsMainController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        List<UserContactButtonControl> userContactButtonControls = friends.stream().map(friend -> new UserContactButtonControl(friend, () -> {
-            viewSwapper.loadRecentContact(friend);
-        })).collect(Collectors.toList());
-        refreshList(userContactButtonControls);
+        contactsListview.setItems(FXCollections.observableArrayList(friends));
+        contactsListview.setCellFactory(new Callback<ListView<Account>, ListCell<Account>>() {
+            @Override
+            public ListCell<Account> call(ListView<Account> param) {
+                return new FriendListCell();
+            }
+        });
     }
 
-    private void refreshList(List<UserContactButtonControl> userContactButtonControls){
-        contactsListview.getItems().removeAll(contactsListview.getItems());
-        contactsListview.getItems().addAll(userContactButtonControls);
+    private class FriendListCell extends ListCell<Account> {
+        @Override
+        protected void updateItem(Account item, boolean empty) {
+            super.updateItem(item, empty);
+            if(!empty){
+                setGraphic(new UserContactButtonControl(item, () -> { viewSwapper.loadRecentContact(item); }));
+            }
+        }
     }
 
     public static Parent getInstance(Account account, List<Account> friends, ViewSwapperInterface viewSwapper){
