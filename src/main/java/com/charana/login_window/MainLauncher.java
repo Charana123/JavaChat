@@ -14,7 +14,7 @@ public class MainLauncher extends Application {
     static int serverPort;
     static InetAddress serverIP;
 
-    private Parent createContent(Stage primaryStage) throws IOException{
+    private Parent createContent(Stage primaryStage) throws Exception {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/views/login_window/StartUp_View.fxml"));
         StartUp_Controller controller = new StartUp_Controller(primaryStage, serverIP, serverPort);
         loader.setController(controller);
@@ -22,7 +22,7 @@ public class MainLauncher extends Application {
     }
 
     @Override
-    public void start(Stage primaryStage) throws IOException {
+    public void start(Stage primaryStage) throws Exception {
         Scene scene = new Scene(createContent(primaryStage));
         primaryStage.setScene(scene);
         primaryStage.show();

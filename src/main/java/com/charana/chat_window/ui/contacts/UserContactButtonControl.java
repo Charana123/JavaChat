@@ -31,7 +31,7 @@ public class UserContactButtonControl extends HBox implements Initializable{
     @FXML Button statusField;
     @FXML Button listField;
     @FXML Button locationField;
-    Account account;
+    private final Account account;
 
     public UserContactButtonControl(Account account, Procedure onMouseClicked){
         this.account = account;
@@ -43,7 +43,6 @@ public class UserContactButtonControl extends HBox implements Initializable{
         try{ fxmlLoader.load(); }
         catch (IOException e) { e.printStackTrace(); }
     }
-
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {

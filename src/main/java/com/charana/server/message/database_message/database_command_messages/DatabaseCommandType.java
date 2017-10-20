@@ -8,6 +8,7 @@ public enum DatabaseCommandType {
     GET_ACCOUNT,
     GET_FRIENDS,
     GET_POSSIBLE_USERS,
+    GET_POSSIBLE_USER,
     GET_ADD_FRIEND_NOTIFICATIONS
 
 }

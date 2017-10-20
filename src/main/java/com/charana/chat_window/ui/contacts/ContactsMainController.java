@@ -55,7 +55,7 @@ public class ContactsMainController implements Initializable {
         protected void updateItem(Account item, boolean empty) {
             super.updateItem(item, empty);
             if(!empty){
-                setGraphic(new UserContactButtonControl(item, () -> { viewSwapper.loadRecentContact(item); }));
+                setGraphic(new UserContactButtonControl(item, () ->  viewSwapper.loadRecentContact(item)));
             }
         }
     }

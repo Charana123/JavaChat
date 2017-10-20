@@ -42,11 +42,10 @@ public class AddContactController implements Initializable {
         addContactSearchBarContainer.getChildren().add(new AddContactSearchBar((String searchQuery) -> {
             String emailREGEXP = "^[\\w_.%+-]+@[\\w.-]+\\.[\\w^\\d]{2,6}$";
             if(Pattern.matches(emailREGEXP, searchQuery)){
-                serverAPI.getAccount(searchQuery, (Boolean success, Account account) -> {
+                serverAPI.getPossibleUser(account.email, searchQuery, (Boolean success, Account account) -> {
                     if(success){
                         updateSearchResults(Arrays.asList(new AddUserContactButtonControl(account, onAddHandler)));
-                    }
-                    else clearSearchResults();
+                    } else clearSearchResults();
                 });
             }
             else {
@@ -58,8 +57,7 @@ public class AddContactController implements Initializable {
                     if(success){
                         List<AddUserContactButtonControl> addUserContactButtonControls = possibleAccounts.stream().map(possibleAccount -> new AddUserContactButtonControl(possibleAccount, onAddHandler)).collect(Collectors.toList());
                         updateSearchResults(addUserContactButtonControls);
-                    }
-                    else clearSearchResults();
+                    } else clearSearchResults();
                 });
             }
         }));

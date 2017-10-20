@@ -122,7 +122,7 @@ public class DatabaseConnectorORM {
 //        return true;
 //    }
 
-    public UserData getAccount(String email){
+    public UserData getUser(String email){
         try{
             User user = userDAO.queryForId(email);
 
@@ -163,23 +163,27 @@ public class DatabaseConnectorORM {
         }
     }
 
-    //TODO:: Filter all current friends from contact search results
-    public List<User> getPossibleUsers(String userEmail, DisplayName displayName){
+    public List<User> getPossibleUsers(String sourceEmail, DisplayName displayName){
         logger.info("Finding possible contects for '{}'", displayName.toString());
         try {
+            User user = userDAO.queryForId(sourceEmail);
+            List<User> friends = user.getFriends().stream().map(friend -> new User(friend.getEmail())).collect(Collectors.toList());
+
             if (displayName.firstName != null && displayName.lastName == null) {
                 String regexp = "(?i)" + displayName.firstName + "(\\w)*";
                 HashSet<User> users1 = new HashSet<>(userDAO.queryRaw("SELECT * FROM Users WHERE firstName REGEXP ?", userDAO.getRawRowMapper(), regexp).getResults());
                 HashSet<User> users2 = new HashSet<>(userDAO.queryRaw("SELECT * FROM Users WHERE lastName REGEXP ?", userDAO.getRawRowMapper(), regexp).getResults());
                 users1.addAll(users2);
-                users1.remove(new User(userEmail));
+                users1.remove(user); //Remove yourself from the search results
+                users1.removeAll(friends); //Remove all current friends from the search results
                 return new ArrayList<>(users1);
             }
             else if(displayName.firstName != null && displayName.lastName != null){
                 String regexp1 = "(?i)" + displayName.firstName + "(\\w)*";
                 String regexp2 = "(?i)" + displayName.lastName + "(\\w)*";
                 List<User> users = userDAO.queryRaw("SELECT * FROM Users WHERE (firstName REGEXP ?) AND (lastName REGEXP ?)", userDAO.getRawRowMapper(), regexp1, regexp2).getResults();
-                users.remove(new User(userEmail));
+                users.remove(user);
+                users.removeAll(friends);
                 return users;
             }
             else {
@@ -191,6 +195,14 @@ public class DatabaseConnectorORM {
             logger.error("Unable to find possible users", e);
             return null;
         }
+    }
+
+    public User getPossibleUser(String sourceEmail, String possibleUser){
+        User user = getUser(possibleUser).user;
+        List<String> sourceFriendEmails = getUser(sourceEmail).user.getFriends().stream().map(friend -> friend.getEmail()).collect(Collectors.toList());
+        if(possibleUser.equals(sourceEmail) || sourceFriendEmails.stream().anyMatch(sourceFriendEmail -> sourceFriendEmail.equals(possibleUser))){
+            return null;
+        } else { return user; }
     }
 
     public List<FriendRequestDB> getAddFriendNotifications(String email){
@@ -216,8 +228,8 @@ public class DatabaseConnectorORM {
                     return Optional.of(friendRequestDB);
                 }
                 catch (SQLException e){
-                    //TODO:: Remove friend notification from targetUser (if the sourceUser cannot be found)
-                    //TODO:: Fix removeFriendNotification to take aurguments in the correct order
+                    //Remove friend notification from targetUser (if the sourceUser cannot be found), log error and return empty optional
+                    user.getAddFriendNotification().remove(addFriendNotificationDB);
                     logger.error("getAddFriendNotification Error, Query for user by id {} failed", addFriendNotificationDB.getSourceEmail(), e);
                     return Optional.empty();
                 }
@@ -254,6 +266,7 @@ public class DatabaseConnectorORM {
         }
     }
 
+    //TODO:: Fix removeFriendNotification to take aurguments in the correct order
     public boolean removeFriendNotification(String sourceUserEmail, String targetUserEmail){
         try{
             DeleteBuilder<AddFriendNotification, Integer> deleteBuilder = addFriendNotificationsDAO.deleteBuilder();

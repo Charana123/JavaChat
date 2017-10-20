@@ -7,10 +7,7 @@ import com.charana.server.message.Message;
 import com.charana.server.message.database_message.FriendRequest;
 import com.charana.server.message.database_message.database_command_messages.concrete_database_command_messages.*;
 import com.charana.server.message.database_message.database_response_messages.DatabaseResponseMessage;
-import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetAccountResponseMessage;
-import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetAddFriendNotificationsResponseMessage;
-import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetFriendsResponseMessage;
-import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.GetPossibleUsersResponseMessage;
+import com.charana.server.message.database_message.database_response_messages.concrete_database_response_messages.*;
 import com.charana.server.message.friend_requests.FriendRequestMessage;
 import com.charana.server.message.friend_requests.FriendRequestResponseMessage;
 import com.charana.server.message.friend_requests.FriendRequestResponseType;
@@ -76,6 +73,13 @@ public class ServerAPI {
         new Thread(() -> {
             GetPossibleUsersResponseMessage response = (GetPossibleUsersResponseMessage) sendAndRecieve(new GetPossibleUsersMessage(null, displayName));
             Platform.runLater(() -> completionHandler.accept(response.success, response.possibleUsers));
+        }).start();
+    }
+
+    public void getPossibleUser(String sourceUser, String possibleUser, BiConsumer<Boolean, Account> completionHandler){
+        new Thread(() -> {
+            GetPossibleUserResponseMessage response = (GetPossibleUserResponseMessage) sendAndRecieve(new GetPossibleUserMessage(null, sourceUser, possibleUser));
+            Platform.runLater(() -> completionHandler.accept(response.success, response.account));
         }).start();
     }
 

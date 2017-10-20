@@ -158,11 +158,6 @@ public class ServerConnector {
                                 break;
                             case FRIEND_REQUEST:
                                 serverUIInterface.addFriendNotification();
-                                //TODO:: When the user clicks to response on the notification i send a notification message
-                                //TODO:: back to the server to tell him to respond.
-                                break;
-                            case FRIEND_REQUEST_RESPONSE:
-
                                 break;
                         }
                     }

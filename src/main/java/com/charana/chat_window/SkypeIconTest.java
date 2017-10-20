@@ -1,9 +1,7 @@
-package com.charana.chat_window;/**
- * Created by Charana on 7/30/17.
- */
+package com.charana.chat_window;
 
-import com.charana.chat_window.ui.notification_tab.NewNotificationsGraphic;
-import com.charana.chat_window.ui.notification_tab.NoNewNotificationsGraphic;
+import com.charana.chat_window.ui.skype_icons.SkypeIcon;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -12,15 +10,12 @@ import javafx.scene.control.*;
 import javafx.scene.shape.*;
 import javafx.stage.Stage;
 
-public class NotificationGraphics_TEST extends Application {
+public class SkypeIconTest extends Application {
 
 
     private Parent createContent() {
         VBox root = new VBox();
-        Button button = new Button("TEXT");
-        button.setGraphic(new NewNotificationsGraphic(25, 25, 8));
-        //button.setGraphic(new NoNewNotificationsGraphic(50, 50));
-        root.getChildren().add(button);
+        root.getChildren().add(new SkypeIcon(FontAwesomeIcon.VIDEO_CAMERA, 40));
         return root;
     }
 

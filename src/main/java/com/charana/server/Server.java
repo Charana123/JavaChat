@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static com.charana.server.message.database_message.database_command_messages.DatabaseCommandType.GET_ADD_FRIEND_NOTIFICATIONS;
+
 public class Server {
     public final int serverPort = 8192;
     public final String storagePath = "/Users/Charana/Desktop/Application/";
@@ -189,7 +191,7 @@ public class Server {
                     break;
                 case GET_ACCOUNT:
                     GetAccountMessage getAccountMessage = (GetAccountMessage) message;
-                    UserData userData = dbconn.getAccount(getAccountMessage.email);
+                    UserData userData = dbconn.getUser(getAccountMessage.email);
                     if(userData !=  null) {
                         Account account = userToAccount(userData.user, userData.missedNotifications);
                         send(new GetAccountResponseMessage(null, true, account));
@@ -210,6 +212,14 @@ public class Server {
                         List<Account> possibleAccounts = possibleUsers.stream().map(possibleUser -> userToAccount(possibleUser)).collect(Collectors.toList());
                         send(new GetPossibleUsersResponseMessage(null, true, possibleAccounts));
                     } else { send(new GetPossibleUsersResponseMessage(null, false, null)); }
+                    break;
+                case GET_POSSIBLE_USER:
+                    GetPossibleUserMessage getPossibleUserMessage = (GetPossibleUserMessage) message;
+                    User possibleUser = dbconn.getPossibleUser(getPossibleUserMessage.sourceEmail, getPossibleUserMessage.possibleUser);
+                    if(possibleUser != null){
+                        Account possibleAccount = userToAccount(possibleUser);
+                        send(new GetPossibleUserResponseMessage(null, true, possibleAccount));
+                    } else { send(new GetPossibleUserResponseMessage(null, false, null)); }
                     break;
                 case GET_ADD_FRIEND_NOTIFICATIONS:
                     GetAddFriendNotificationsMessage getAddFriendNotificationsMessage = (GetAddFriendNotificationsMessage) message;

@@ -1,7 +1,5 @@
 package com.charana.server.message.database_message;
 
-import org.apache.commons.io.output.ByteArrayOutputStream;
-
 import java.io.Serializable;
 
 public class ProfileImage implements Serializable{

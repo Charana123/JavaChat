@@ -1,0 +1,17 @@
+.anchor-pane{
+    -fx-background-color: white;
+    -fx-border-width: 1px;
+    -fx-border-color: #1DB0ED transparent transparent transparent;
+}
+.hbox{
+    -fx-background-color: white;
+}
+
+.button {
+    -fx-background-color: transparent;
+}
+
+/* To make a text area fully transparent the components of its substructure must be set transparent as well */
+.text-area, .scroll-pane, .content, .viewport {
+    -fx-background-color: transparent;
+}

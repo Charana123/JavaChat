@@ -16,7 +16,9 @@ import com.charana.server.message.database_message.Account;
 import com.charana.server.message.database_message.FriendRequest;
 import com.charana.server.message.friend_requests.FriendRequestResponseType;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -32,19 +34,16 @@ import org.controlsfx.control.PopOver;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ResourceBundle;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public class ChatController extends BaseWindowController implements Initializable, ViewSwapperInterface, ServerUIInterface {
+public class ChatController extends BaseWindowController implements Initializable {
 
     @FXML VBox contentContainer;
 
     @FXML ListView<UserSidebarButtonControl> recentContacts;
     @FXML Button notificationsButton;
-    ObservableList<UserSidebarButtonControl> recentContactsItemsView;
-    ArrayList<UserSidebarButtonControl> userecentContactsItems;
+    LinkedHashSet<UserSidebarButtonControl> recentContactsItemsView = new LinkedHashSet<>();
     private final ServerConnector serverConnector;
     private final ServerAPI serverAPI;
     private final Stage chatStage;
@@ -58,7 +57,7 @@ public class ChatController extends BaseWindowController implements Initializabl
                 serverPort,
                 () -> hideWarningDialog(),
                 (String warningHeader, String warningContent) -> showWarningDialog(warningHeader, warningContent),
-                this,
+                new ServerUIInterfaceIMPL(),
                 account.email);
         chatStage.setOnCloseRequest(event -> serverConnector.disconnect());
         this.serverAPI = new ServerAPI(serverConnector);
@@ -69,7 +68,6 @@ public class ChatController extends BaseWindowController implements Initializabl
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         //Anything code prior to scene populating (attaching listeners, loading data from model)
-        recentContactsItemsView = recentContacts.getItems();
         if(account.missedNotifications > 0){
             notificationsButton.setGraphic(new NewNotificationsGraphic(notificationsButton.getPrefWidth()/2, notificationsButton.getPrefHeight()/2, account.missedNotifications));
         }
@@ -80,7 +78,7 @@ public class ChatController extends BaseWindowController implements Initializabl
     @FXML
     void viewContacts(){
         serverAPI.getFriends(account.email, (Boolean success, List<Account> friends) -> {
-            Parent root = ContactsMainController.getInstance(account, friends, this);
+            Parent root = ContactsMainController.getInstance(account, friends, new ViewSwapperInterfaceIMPL());
             swapContent(root);
         });
     }
@@ -116,32 +114,37 @@ public class ChatController extends BaseWindowController implements Initializabl
     }
 
     //Interface - ViewSwapperInterface implemented methods
-    public void viewAddContact(){
-        Parent root = AddContactController.getInstance(serverAPI, account);
-        swapContent(root);
-    }
+    private class ViewSwapperInterfaceIMPL implements ViewSwapperInterface{
 
-    public void loadRecentContact(Account friend){
-        UserSidebarButtonControl userSidebarButtonControl = new UserSidebarButtonControl(170, 50, friend);
-        recentContacts.getItems().add(userSidebarButtonControl);
-    }
+        public void viewAddContact(){
+            Parent root = AddContactController.getInstance(serverAPI, account);
+            swapContent(root);
+        }
 
+        public void loadRecentContact(Account friend){
+            UserSidebarButtonControl userSidebarButtonControl = new UserSidebarButtonControl(170, 50, friend);
+            boolean elementAdded = recentContactsItemsView.add(userSidebarButtonControl);
+            if(elementAdded) recentContacts.setItems(FXCollections.observableArrayList(recentContactsItemsView));
+            //Alternatively we could get the last element of the (constant order) iterator and add that to the listview via ListView.getItems().add()
+        }
+    }
 
     //Interface - ServerUIInterface implemented methods
-    @Override
-    public void addFriendNotification() {
-        Platform.runLater(() -> {
-            Node graphicNode = notificationsButton.getGraphic();
-            if(graphicNode instanceof NoNewNotificationsGraphic){
-                notificationsButton.setGraphic(new NewNotificationsGraphic(notificationsButton.getPrefWidth()/2, notificationsButton.getPrefHeight()/2, 1));
-            }
-            else if(graphicNode instanceof  NewNotificationsGraphic){
-                NewNotificationsGraphic newNotificationsGraphic = (NewNotificationsGraphic) graphicNode;
-                newNotificationsGraphic.incrementNotificationNum();
-            }
-        });
-    }
+    private class ServerUIInterfaceIMPL implements ServerUIInterface {
 
+        public void addFriendNotification() {
+            Platform.runLater(() -> {
+                Node graphicNode = notificationsButton.getGraphic();
+                if(graphicNode instanceof NoNewNotificationsGraphic){
+                    notificationsButton.setGraphic(new NewNotificationsGraphic(notificationsButton.getPrefWidth()/2, notificationsButton.getPrefHeight()/2, 1));
+                }
+                else if(graphicNode instanceof  NewNotificationsGraphic){
+                    NewNotificationsGraphic newNotificationsGraphic = (NewNotificationsGraphic) graphicNode;
+                    newNotificationsGraphic.incrementNotificationNum();
+                }
+            });
+        }
+    }
 
 
     public static Stage chatWindow(Account account, InetAddress serverIP, int serverPort){

@@ -63,12 +63,17 @@ public class UserSidebarButtonControl extends Button {
 
     @Override
     public boolean equals(Object obj) {
-        UserSidebarButtonControl object1 = this;
-        if(object1 == obj) return true;
+        UserSidebarButtonControl obj1 = this;
+        if(obj1 == obj) return true;
         if(obj instanceof UserSidebarButtonControl){
-            UserSidebarButtonControl object2 = (UserSidebarButtonControl) obj;
-            if(object1.email.equals(object2.email)) return true;
+            UserSidebarButtonControl obj2 = (UserSidebarButtonControl) obj;
+            if(obj1.email.equals(obj2.email)) return true;
         }
         return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return email.hashCode();
     }
 }
