@@ -1,4 +1,4 @@
-# JavaFx-SocketChat
+# JavaChat
 
 Chat/Video-Streaming GUI application
 
