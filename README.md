@@ -12,7 +12,7 @@ Chat/Video-Streaming GUI application
 <h3> Currently in Development (Beta) </h3>
 <ul>
   <li> Webcam & Audio Capture </li> 
-  <li> Video compression in H264 (via Xuggler, a Video/Audio encoding/decoding open source library) </li> 
+  <li> Video compression in H264 and Audio compression in MP3 (via Xuggler, a Video/Audio encoding/decoding open source library) </li> 
   <li> Streaming audio/video data over a network via RTSP (Real Time Streaming Protocol) Protocol. </li> 
  </ul>
 
