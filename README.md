@@ -18,10 +18,10 @@ Chat/Video-Streaming GUI application
 
 
 <p align="center">
-<img src="https://github.com/Charana123/JavaChat/tree/master/screenshots/Animation.gif?raw=true"/>
+<img src="/screenshots/Animation.gif?raw=true"/>
 </p>
 <p align="center">
-<img src="https://github.com/Charana123/JavaChat/tree/master/screenshots/Animation3.gif?raw=true"/>
+<img src="/screenshots/Animation3.gif?raw=true"/>
 </br>
 <img src="http://i.imgur.com/2UvHIJb.png"/>
 </p>
