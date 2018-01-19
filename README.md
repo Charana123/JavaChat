@@ -23,12 +23,12 @@ Chat/Video-Streaming GUI application
 <p align="center">
 <img src="https://github.com/Charana123/JavaChat/tree/master/screenshots/Animation3.gif?raw=true"/>
 </br>
-![image1](http://i.imgur.com/2UvHIJb.png)
+<img src="http://i.imgur.com/2UvHIJb.png"/>
 </p>
 Notifications using Tray-Notifications Library
 <p align="center">
-![image2](http://i.imgur.com/Ckww6DW.png)
-</p>
+<img src="http://i.imgur.com/Ckww6DW.png"/>
+</p> 
 
 <h3> New Features! - Voice Messages </h3>
 <img src="https://github.com/DomHeal/JavaFX-Chat/blob/master/screenshots/voicemessage.png?raw=true"/>
