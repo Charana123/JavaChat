@@ -9,7 +9,7 @@ Chat/Video-Streaming GUI application
   <li> Data Storage - User data stored on H2 Database Server (a Java SQL Database) and Object Relational Mapping via ORMLite </li> 
  </ul>
 
-<h3> Currently in Development (Beta) </h3>
+<h3> Currently in Beta </h3>
 <ul>
   <li> Webcam & Audio Capture </li> 
   <li> Video compression in H264 and Audio compression in MP3 (via Xuggler, a Video/Audio encoding/decoding open source library) </li> 
